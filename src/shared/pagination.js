@@ -1,8 +1,8 @@
-function buildPage(rows, count, page, limit) {
+function paginate(rows, count, page, limit) {
   return {
     data: rows,
     meta: { page, limit, total: count },
   };
 }
 
-module.exports = { buildPage };
+module.exports = { paginate };
