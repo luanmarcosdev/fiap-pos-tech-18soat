@@ -4,6 +4,7 @@ const { swaggerSpec } = require('./infra/docs/swagger');
 const { errorHandler } = require('./infra/http/error-handler');
 const health = require('./features/health');
 const auth = require('./features/auth');
+const clientes = require('./features/clientes');
 
 // create express app
 const app = express();
@@ -20,7 +21,8 @@ api.use(health.routes);
 // rotas públicas
 api.use(auth.routes);
 
-// rotas protegidas: api.use('/<recurso>', auth.authenticate, <slice>.routes)
+// rotas protegidas
+api.use('/clientes', auth.authenticate, clientes.routes);
 
 // API called with /api prefix
 app.use('/api', api);
