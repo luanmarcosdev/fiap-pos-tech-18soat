@@ -27,6 +27,9 @@ const Usuario = sequelize.define(
   {
     tableName: 'usuarios',
     underscored: true,
+    // underscored só renomeia as colunas; aqui os atributos também ficam em snake_case
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
   },
 );
 
