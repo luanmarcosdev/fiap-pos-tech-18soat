@@ -1,15 +1,15 @@
 const { z } = require('zod');
-const { validate } = require('@src/infra/http/validate');
+const { validateRequest } = require('@src/infra/http/validate-request');
 const { paginationQueryDto } = require('@src/infra/http/pagination');
 const { ValidationError } = require('@src/shared/errors');
 
 const run = (schemas, req) => {
   const next = jest.fn();
-  validate(schemas)(req, {}, next);
+  validateRequest(schemas)(req, {}, next);
   return next;
 };
 
-describe('validate', () => {
+describe('validateRequest', () => {
   const body = z.object({ nome: z.string().trim().min(1) });
   const params = z.object({ id: z.uuid() });
 

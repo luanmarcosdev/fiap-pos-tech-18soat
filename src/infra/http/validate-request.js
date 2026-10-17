@@ -7,7 +7,7 @@ const toDetails = (issues) =>
  * Valida params, query e body com schemas Zod.
  * No Express 5 `req.query` é somente leitura, então a query parseada vai para `req.validatedQuery`.
  */
-function validate({ params, query, body } = {}) {
+function validateRequest({ params, query, body } = {}) {
   return (req, res, next) => {
     const details = [];
     const parsed = {};
@@ -28,4 +28,4 @@ function validate({ params, query, body } = {}) {
   };
 }
 
-module.exports = { validate };
+module.exports = { validateRequest };
