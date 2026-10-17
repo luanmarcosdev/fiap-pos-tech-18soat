@@ -19,6 +19,31 @@ O código em `src/` é montado como volume no container da API e o `node --watch
 | Postgres   | localhost:5432               |
 | Redis      | localhost:6379               |
 
+### Banco de dados
+
+Migrations e seeders ficam em `src/infra/database/` e rodam via `sequelize-cli`:
+
+```bash
+docker compose exec api npm run db:migrate        # aplica as migrations
+docker compose exec api npm run db:seed           # cria o usuário admin (idempotente)
+docker compose exec api npm run db:migrate:undo   # desfaz a última migration
+docker compose exec api npm run db:seed:undo      # remove os dados dos seeders
+```
+
+O usuário admin é criado com `ADMIN_USUARIO` e `ADMIN_SENHA` do `.env` (padrão do `.env.example`: `admin` / `admin`).
+
+### Autenticação
+
+Todas as rotas de cadastro exigem um token JWT. Para obter o token:
+
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"usuario":"admin","senha":"admin"}'
+```
+
+Envie o token no header `Authorization: Bearer <token>`. No Swagger, use o botão **Authorize**. O segredo e a validade do token vêm de `JWT_SECRET` e `JWT_EXPIRES_IN`.
+
 ### Testes
 
 ```bash
