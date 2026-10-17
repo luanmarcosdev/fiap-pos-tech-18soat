@@ -57,28 +57,53 @@ O resultado aparece em http://localhost:9000 ao final da execução.
 
 ## Estrutura
 
-Organizada em vertical slices, um por agregado do event storming (`docs/ddd/event-storming`):
+Monólito modular organizado em vertical slices: um por agregado do event storming (`docs/ddd/event-storming`) e um por cadastro de apoio (clientes, veículos, serviços, peças).
 
 ```
 src/
-  app.js                 # app Express (rotas + Swagger)
+  app.js                 # app Express (rotas, Swagger, error handler)
   server.js              # bootstrap: conecta no Postgres e sobe o server
+  shared/                # código sem dependências usado por todas as camadas (erros, paginação)
   infra/
     database/            # Sequelize (config, conexão, migrations, seeders)
     docs/                # spec OpenAPI
+    http/                # error handler, validação Zod, DTO de paginação
   features/
-    health/
-    atendimento/
-    ordem-servico/
-    orcamento/
-    manutencao/
+    <slice>/
+      domain/            # value objects (*.vo.js) e entidades (*.entity.js) — JS puro
+      application/       # service (cadastros) ou casos de uso (agregados)
+      infra/             # model Sequelize e repository
+      http/              # routes (+ @openapi), controller, DTOs Zod (*.dto.js)
+      index.js           # composition root + interface pública do slice
+tests/                   # espelha src/ (ex.: tests/features/health/health.test.js)
 ```
 
-Cada slice concentra suas rotas, casos de uso, modelos e testes, com uma pasta por comando do event storming (ex.: `atendimento/iniciar-atendimento/`). Rotas são documentadas no Swagger via blocos `@openapi` em arquivos `*.routes.js`.
+### Camadas e injeção de dependência
 
-### Fronteiras entre slices
+As dependências apontam para dentro: `http` e `infra` conhecem `domain`; `application` conhece só `domain` e `shared`; `domain` não conhece ninguém. `domain` e `application` não importam pacotes externos (express, sequelize, zod...).
 
-Cada slice expõe sua interface pública em um `index.js` (rotas e funções que outros slices podem usar). Importar arquivos internos de outro slice (`../atendimento/atendimento.model`) é proibido — o ESLint (`eslint-plugin-boundaries`) acusa erro:
+`application` nunca faz `require` de `infra`: recebe o repository por **factory**, e o `index.js` do slice faz a fiação:
+
+```js
+// index.js
+const clientesRepository = require('./infra/clientes.repository');
+const clientesService = makeClientesService({ clientesRepository });
+```
+
+Nos testes unitários basta injetar um fake (`{ create: jest.fn() }`), sem `jest.mock`.
+
+### Service único × casos de uso
+
+- **Cadastros de apoio** (clientes, veículos, serviços, peças, auth): operações simétricas de CRUD, então um único `application/<slice>.service.js` com `create`, `getById`, `list`, `update`, `remove`.
+- **Agregados core** (atendimento, ordem-servico, orcamento, manutencao): um arquivo por caso de uso, com o nome do comando do event storming (ex.: `application/iniciar-atendimento.js` exportando `makeIniciarAtendimento`).
+
+### Nomenclatura
+
+Métodos e verbos em inglês (`create`, `getById`, `findById`, `update`, `remove`); termos de domínio, tabelas, campos e rotas em português (linguagem ubíqua).
+
+### Fronteiras
+
+Cada slice expõe sua interface pública em um `index.js`. Importar arquivos internos de outro slice (`../clientes/infra/clientes.repository`) é proibido, assim como violar a direção das camadas — o ESLint (`eslint-plugin-boundaries`) acusa erro:
 
 ```bash
 docker compose exec api npm run lint
