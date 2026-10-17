@@ -43,16 +43,6 @@ const { createClienteDto, updateClienteDto, idParamDto, listQueryDto } = require
  *       required: true
  *       schema: { type: string, format: uuid }
  *   responses:
- *     NaoAutenticado:
- *       description: Token ausente, inválido ou expirado
- *       content:
- *         application/json:
- *           schema: { $ref: '#/components/schemas/Erro' }
- *     DadosInvalidos:
- *       description: Dados inválidos
- *       content:
- *         application/json:
- *           schema: { $ref: '#/components/schemas/ErroValidacao' }
  *     ClienteNaoEncontrado:
  *       description: Cliente não encontrado
  *       content:
