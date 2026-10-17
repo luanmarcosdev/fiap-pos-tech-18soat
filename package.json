@@ -56,6 +56,9 @@
     "moduleNameMapper": {
       "^@src/(.*)$": "<rootDir>/src/$1"
     },
-    "clearMocks": true
+    "clearMocks": true,
+    "setupFiles": [
+      "<rootDir>/tests/jest.setup.js"
+    ]
   }
 }
