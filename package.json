@@ -33,7 +33,8 @@
   "jest": {
     "testEnvironment": "node",
     "roots": [
-      "<rootDir>/src"
+      "<rootDir>/src",
+      "<rootDir>/tests"
     ],
     "coverageDirectory": "coverage",
     "coverageReporters": [
@@ -44,6 +45,10 @@
       "src/**/*.js",
       "!src/server.js",
       "!src/infra/database/**"
-    ]
+    ],
+    "moduleNameMapper": {
+      "^@src/(.*)$": "<rootDir>/src/$1"
+    },
+    "clearMocks": true
   }
 }
