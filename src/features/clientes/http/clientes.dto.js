@@ -1,5 +1,6 @@
 const { z } = require('zod');
 const { paginationQueryDto } = require('../../../infra/http/pagination');
+const { optionalText } = require('../../../infra/http/dto-helpers');
 const { Documento } = require('../domain/documento.vo');
 
 const UFS = [
@@ -8,9 +9,6 @@ const UFS = [
 ];
 
 const onlyDigits = (value) => value.replace(/\D/g, '');
-
-// campos opcionais viram null quando ausentes, já que o PUT substitui o recurso inteiro
-const optionalText = (max) => z.string().trim().max(max).nullish().transform((v) => v || null);
 
 const createClienteDto = z.object({
   nome: z.string().trim().min(1).max(150),

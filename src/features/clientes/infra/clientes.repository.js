@@ -1,10 +1,8 @@
 const { Op } = require('sequelize');
+const { escapeLike } = require('../../../infra/database/escape-like');
 const { Cliente } = require('./clientes.model');
 
 const toPlain = (model) => (model ? model.toJSON() : null);
-
-// evita que % e _ digitados pelo usuário virem curingas no ILIKE
-const escapeLike = (value) => value.replace(/[\\%_]/g, '\\$&');
 
 async function create(data) {
   return toPlain(await Cliente.create(data));
