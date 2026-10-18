@@ -1,6 +1,6 @@
 const { ConflictError, ValidationError } = require('../../../shared/errors');
 
-function assertQuantidade(quantidade) {
+function validarQuantidade(quantidade) {
   if (!Number.isInteger(quantidade) || quantidade <= 0) {
     throw new ValidationError('Quantidade inválida', [
       { campo: 'quantidade', mensagem: 'Deve ser um número inteiro maior que zero' },
@@ -38,24 +38,19 @@ class Peca {
     return this.#quantidadeEstoque <= this.#estoqueMinimo;
   }
 
-  hasStock(quantidade) {
-    assertQuantidade(quantidade);
+  temEstoque(quantidade) {
+    validarQuantidade(quantidade);
     return quantidade <= this.#quantidadeEstoque;
   }
 
-  registerEntry(quantidade) {
-    assertQuantidade(quantidade);
+  registrarEntrada(quantidade) {
+    validarQuantidade(quantidade);
     this.#quantidadeEstoque += quantidade;
   }
 
-  consume(quantidade) {
-    if (!this.hasStock(quantidade)) throw new ConflictError('Estoque insuficiente');
+  baixarEstoque(quantidade) {
+    if (!this.temEstoque(quantidade)) throw new ConflictError('Estoque insuficiente');
     this.#quantidadeEstoque -= quantidade;
-  }
-
-  /** Campos persistidos que as operações de estoque alteram. */
-  toStock() {
-    return { quantidade_estoque: this.#quantidadeEstoque };
   }
 }
 

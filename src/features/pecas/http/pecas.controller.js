@@ -30,8 +30,8 @@ class PecasController {
     res.status(204).end();
   };
 
-  registerEntry = async (req, res) => {
-    const peca = await this.#pecasService.registerEntry(req.params.id, req.body.quantidade);
+  registrarEntrada = async (req, res) => {
+    const peca = await this.#pecasService.registrarEntrada(req.params.id, req.body.quantidade);
     res.status(200).json(peca);
   };
 }

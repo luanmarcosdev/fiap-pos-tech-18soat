@@ -25,8 +25,8 @@ describe('Placa', () => {
 
   it('normaliza e identifica o formato', () => {
     expect(Placa.create('abc-1d23').valor).toBe('ABC1D23');
-    expect(Placa.create('ABC1D23').isMercosul).toBe(true);
-    expect(Placa.create('ABC1234').isMercosul).toBe(false);
+    expect(Placa.create('ABC1D23').ehMercosul).toBe(true);
+    expect(Placa.create('ABC1234').ehMercosul).toBe(false);
     expect(String(Placa.create('abc1234'))).toBe('ABC1234');
   });
 

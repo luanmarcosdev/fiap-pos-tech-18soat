@@ -13,7 +13,7 @@ describe('Peca', () => {
   it('usa zero como padrão e expõe id e estoque', () => {
     const p = new Peca({ id: 'p1' });
 
-    expect(p.toStock()).toEqual({ quantidade_estoque: 0 });
+    expect(p.quantidadeEstoque).toBe(0);
     expect(p.id).toBe('p1');
     expect(peca().quantidadeEstoque).toBe(10);
   });
@@ -22,38 +22,38 @@ describe('Peca', () => {
     expect(() => peca({ quantidade_estoque: -1 })).toThrow('Estado de estoque inconsistente');
   });
 
-  it('hasStock (Verificar Estoque) compara com o estoque atual', () => {
-    expect(peca().hasStock(10)).toBe(true);
-    expect(peca().hasStock(11)).toBe(false);
+  it('temEstoque (Verificar Estoque) compara com o estoque atual', () => {
+    expect(peca().temEstoque(10)).toBe(true);
+    expect(peca().temEstoque(11)).toBe(false);
   });
 
-  it('registerEntry (Peça/Insumo Adquirido) soma ao estoque', () => {
+  it('registrarEntrada (Peça/Insumo Adquirido) soma ao estoque', () => {
     const p = peca();
-    p.registerEntry(5);
+    p.registrarEntrada(5);
 
-    expect(p.toStock()).toEqual({ quantidade_estoque: 15 });
+    expect(p.quantidadeEstoque).toBe(15);
   });
 
-  describe('consume (Baixar Estoque)', () => {
+  describe('baixarEstoque (Baixar Estoque)', () => {
     it('desconta do estoque, inclusive até zerar', () => {
       const p = peca();
-      p.consume(4);
+      p.baixarEstoque(4);
       expect(p.quantidadeEstoque).toBe(6);
 
-      p.consume(6);
+      p.baixarEstoque(6);
       expect(p.quantidadeEstoque).toBe(0);
     });
 
     it('gera ConflictError acima do estoque', () => {
       const p = peca();
 
-      expect(() => p.consume(11)).toThrow(new ConflictError('Estoque insuficiente'));
+      expect(() => p.baixarEstoque(11)).toThrow(new ConflictError('Estoque insuficiente'));
       expect(p.quantidadeEstoque).toBe(10);
     });
   });
 
   it.each([0, -1, 1.5, '2', undefined])('recusa quantidade inválida %p em todas as operações', (quantidade) => {
-    for (const operation of ['hasStock', 'registerEntry', 'consume']) {
+    for (const operation of ['temEstoque', 'registrarEntrada', 'baixarEstoque']) {
       expect(() => peca()[operation](quantidade)).toThrow(ValidationError);
     }
   });

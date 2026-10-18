@@ -42,20 +42,19 @@ class PecasService {
     if (!removed) throw new NotFoundError(NOT_FOUND);
   }
 
-  /** "Verificar Estoque": há quantidade suficiente? */
-  async hasStock(id, quantidade) {
+  async verificarEstoque(id, quantidade) {
     const peca = new Peca(await this.#findOrFail(id));
-    return peca.hasStock(quantidade);
+    return peca.temEstoque(quantidade);
   }
 
-  /** "Peça/Insumo Adquirido": entrada de estoque. */
-  async registerEntry(id, quantidade) {
-    return this.#changeStock(id, (peca) => peca.registerEntry(quantidade));
+  /** Evento "Peça/Insumo Adquirido". */
+  async registrarEntrada(id, quantidade) {
+    return this.#alterarEstoque(id, (peca) => peca.registrarEntrada(quantidade));
   }
 
-  /** "Baixar Estoque": lança ConflictError se não houver quantidade suficiente. */
-  async consume(id, quantidade) {
-    return this.#changeStock(id, (peca) => peca.consume(quantidade));
+  /** Lança ConflictError se não houver quantidade suficiente. */
+  async baixarEstoque(id, quantidade) {
+    return this.#alterarEstoque(id, (peca) => peca.baixarEstoque(quantidade));
   }
 
   async #findOrFail(id) {
@@ -74,11 +73,11 @@ class PecasService {
    * Aplica uma operação da entidade sobre a peça com a linha travada no banco (ver updateStock),
    * para que duas operações simultâneas não leiam o mesmo estoque.
    */
-  async #changeStock(id, operation) {
+  async #alterarEstoque(id, operation) {
     const updated = await this.#pecasRepository.updateStock(id, (data) => {
       const peca = new Peca(data);
       operation(peca);
-      return peca.toStock();
+      return { quantidade_estoque: peca.quantidadeEstoque };
     });
     if (!updated) throw new NotFoundError(NOT_FOUND);
     return this.#toView(updated);
