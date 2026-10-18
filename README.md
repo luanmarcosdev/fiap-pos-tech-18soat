@@ -135,7 +135,10 @@ Convenções de cada peça:
 
 ### Nomenclatura
 
-Métodos e verbos em inglês (`create`, `getById`, `findById`, `update`, `remove`); termos de domínio, tabelas, campos e rotas em português (linguagem ubíqua).
+O critério é: **se o termo aparece num post-it do event storming, fica em português.**
+
+- **Português (linguagem ubíqua):** entidades, value objects e os métodos de regra deles (`peca.baixarEstoque()`, `orcamento.aprovar()`), eventos (`OrcamentoAprovado`), casos de uso dos agregados (`aprovar-orcamento.js`), a interface pública entre slices (`verificarEstoquePeca`, `baixarEstoquePeca`), tabelas, campos e rotas.
+- **Inglês (encanamento técnico):** métodos de repository (`findById`, `findAll`), o CRUD dos services de cadastro (`create`, `getById`, `list`, `update`, `remove`), helpers genéricos (`normalize`, `equals`, `isValid`) e tudo que conversa com Express e Sequelize.
 
 ### Fronteiras
 
