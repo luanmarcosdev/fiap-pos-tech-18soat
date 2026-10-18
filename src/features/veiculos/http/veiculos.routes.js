@@ -17,7 +17,7 @@ const { createVeiculoDto, updateVeiculoDto, idParamDto, listQueryDto } = require
  *           example: ABC-1D23
  *         marca: { type: string, maxLength: 50, example: Volkswagen }
  *         modelo: { type: string, maxLength: 80, example: Gol 1.0 }
- *         ano: { type: integer, minimum: 1900, description: Até o próximo ano, example: 2020 }
+ *         ano: { type: integer, minimum: 1900, description: 'Até o próximo ano', example: 2020 }
  *         cor: { type: string, maxLength: 30, nullable: true, example: Prata }
  *     Veiculo:
  *       allOf:
@@ -84,7 +84,7 @@ function makeVeiculosRoutes({ veiculosController }) {
    *       - { in: query, name: page, schema: { type: integer, minimum: 1, default: 1 } }
    *       - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
    *       - { in: query, name: cliente_id, schema: { type: string, format: uuid } }
-   *       - { in: query, name: placa, description: Placa exata, com ou sem hífen, schema: { type: string } }
+   *       - { in: query, name: placa, description: 'Placa exata, com ou sem hífen', schema: { type: string } }
    *     responses:
    *       200:
    *         description: Página de veículos
