@@ -33,7 +33,7 @@ class Placa {
     return this.#valor;
   }
 
-  get isMercosul() {
+  get ehMercosul() {
     return /[A-Z]/.test(this.#valor[4]);
   }
 
