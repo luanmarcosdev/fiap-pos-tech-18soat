@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { escapeLike } = require('../../../infra/database/escape-like');
+const { containsIgnoringAccents } = require('../../../infra/database/text-search');
 const { Cliente } = require('./clientes.model');
 
 const toPlain = (model) => (model ? model.toJSON() : null);
@@ -18,7 +18,7 @@ async function findByDocumento(documento) {
 
 async function findAll({ page, limit, filtros = {} }) {
   const where = {};
-  if (filtros.nome) where.nome = { [Op.iLike]: `%${escapeLike(filtros.nome)}%` };
+  if (filtros.nome) where[Op.and] = [containsIgnoringAccents('nome', filtros.nome)];
   if (filtros.documento) where.documento = filtros.documento;
 
   const { rows, count } = await Cliente.findAndCountAll({

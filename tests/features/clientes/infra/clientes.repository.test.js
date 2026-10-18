@@ -10,6 +10,7 @@ jest.mock('@src/features/clientes/infra/clientes.model', () => ({
 }));
 
 const { Op } = require('sequelize');
+const { containsIgnoringAccents } = require('@src/infra/database/text-search');
 const { Cliente } = require('@src/features/clientes/infra/clientes.model');
 const clientesRepository = require('@src/features/clientes/infra/clientes.repository');
 const { CPF, buildCliente } = require('../clientes.fixtures');
@@ -40,7 +41,7 @@ describe('clientesRepository', () => {
   });
 
   describe('findAll', () => {
-    it('pagina com offset e limit e filtra nome com ILIKE escapado', async () => {
+    it('pagina com offset e limit e filtra nome sem diferenciar acentos', async () => {
       Cliente.findAndCountAll.mockResolvedValue({ rows: [asModel(cliente)], count: 21 });
 
       const result = await clientesRepository.findAll({
@@ -50,7 +51,7 @@ describe('clientesRepository', () => {
       });
 
       expect(Cliente.findAndCountAll).toHaveBeenCalledWith({
-        where: { nome: { [Op.iLike]: '%50\\%\\_off%' }, documento: CPF },
+        where: { [Op.and]: [containsIgnoringAccents('nome', '50%_off')], documento: CPF },
         offset: 20,
         limit: 10,
         order: [['nome', 'ASC']],
