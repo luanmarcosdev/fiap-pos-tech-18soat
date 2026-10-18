@@ -1,6 +1,6 @@
 const { ConflictError, ValidationError } = require('../../../shared/errors');
 
-function assertQuantidade(quantidade) {
+function validarQuantidade(quantidade) {
   if (!Number.isInteger(quantidade) || quantidade <= 0) {
     throw new ValidationError('Quantidade inválida', [
       { campo: 'quantidade', mensagem: 'Deve ser um número inteiro maior que zero' },
@@ -39,12 +39,12 @@ class Peca {
   }
 
   temEstoque(quantidade) {
-    assertQuantidade(quantidade);
+    validarQuantidade(quantidade);
     return quantidade <= this.#quantidadeEstoque;
   }
 
   registrarEntrada(quantidade) {
-    assertQuantidade(quantidade);
+    validarQuantidade(quantidade);
     this.#quantidadeEstoque += quantidade;
   }
 
