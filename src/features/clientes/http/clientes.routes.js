@@ -54,7 +54,7 @@ const { createClienteDto, updateClienteDto, idParamDto, listQueryDto } = require
  *         application/json:
  *           schema: { $ref: '#/components/schemas/Erro' }
  */
-function makeClientesRoutes({ clientesController }) {
+function createClientesRouter({ clientesController }) {
   const router = Router();
 
   /**
@@ -170,4 +170,4 @@ function makeClientesRoutes({ clientesController }) {
   return router;
 }
 
-module.exports = { makeClientesRoutes };
+module.exports = { createClientesRouter };

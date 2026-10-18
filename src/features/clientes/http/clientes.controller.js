@@ -1,26 +1,34 @@
-function makeClientesController({ clientesService }) {
-  return {
-    async create(req, res) {
-      res.status(201).json(await clientesService.create(req.body));
-    },
+/**
+ * Os handlers são arrow functions para manter o `this` quando o Express os recebe soltos:
+ * `router.post('/', clientesController.create)`.
+ */
+class ClientesController {
+  #clientesService;
 
-    async list(req, res) {
-      res.status(200).json(await clientesService.list(req.validatedQuery));
-    },
+  constructor({ clientesService }) {
+    this.#clientesService = clientesService;
+  }
 
-    async getById(req, res) {
-      res.status(200).json(await clientesService.getById(req.params.id));
-    },
+  create = async (req, res) => {
+    res.status(201).json(await this.#clientesService.create(req.body));
+  };
 
-    async update(req, res) {
-      res.status(200).json(await clientesService.update(req.params.id, req.body));
-    },
+  list = async (req, res) => {
+    res.status(200).json(await this.#clientesService.list(req.validatedQuery));
+  };
 
-    async remove(req, res) {
-      await clientesService.remove(req.params.id);
-      res.status(204).end();
-    },
+  getById = async (req, res) => {
+    res.status(200).json(await this.#clientesService.getById(req.params.id));
+  };
+
+  update = async (req, res) => {
+    res.status(200).json(await this.#clientesService.update(req.params.id, req.body));
+  };
+
+  remove = async (req, res) => {
+    await this.#clientesService.remove(req.params.id);
+    res.status(204).end();
   };
 }
 
-module.exports = { makeClientesController };
+module.exports = { ClientesController };

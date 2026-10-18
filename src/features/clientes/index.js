@@ -1,15 +1,15 @@
 const clientesRepository = require('./infra/clientes.repository');
 const { Documento } = require('./domain/documento.vo');
 const { ClientesService } = require('./application/clientes.service');
-const { makeClientesController } = require('./http/clientes.controller');
-const { makeClientesRoutes } = require('./http/clientes.routes');
+const { ClientesController } = require('./http/clientes.controller');
+const { createClientesRouter } = require('./http/clientes.routes');
 
 const removalGuards = [];
 const clientesService = new ClientesService({ clientesRepository, removalGuards });
-const clientesController = makeClientesController({ clientesService });
+const clientesController = new ClientesController({ clientesService });
 
 module.exports = {
-  routes: makeClientesRoutes({ clientesController }),
+  routes: createClientesRouter({ clientesController }),
 
   // API pública para outros slices: objetos simples ou null, nunca instâncias do Sequelize
   getClienteById: (id) => clientesRepository.findById(id),
