@@ -16,21 +16,21 @@ const { createClienteDto, updateClienteDto, idParamDto, listQueryDto } = require
  *           description: CPF ou CNPJ (inclusive alfanumérico), com ou sem máscara
  *           example: 529.982.247-25
  *         email: { type: string, format: email, nullable: true, example: maria@email.com }
- *         telefone: { type: string, description: 10 ou 11 dígitos, com ou sem máscara, example: (11) 98765-4321 }
- *         cep: { type: string, description: 8 dígitos, com ou sem máscara, example: 01310-100 }
+ *         telefone: { type: string, description: '10 ou 11 dígitos, com ou sem máscara', example: (11) 98765-4321 }
+ *         cep: { type: string, description: '8 dígitos, com ou sem máscara', example: 01310-100 }
  *         rua: { type: string, maxLength: 150, example: Avenida Paulista }
  *         numero: { type: string, maxLength: 10, example: '1000' }
  *         complemento: { type: string, maxLength: 100, nullable: true, example: Apto 12 }
  *         bairro: { type: string, maxLength: 100, example: Bela Vista }
  *         cidade: { type: string, maxLength: 100, example: São Paulo }
- *         estado: { type: string, description: UF, example: SP }
+ *         estado: { type: string, description: 'UF', example: SP }
  *     Cliente:
  *       allOf:
  *         - $ref: '#/components/schemas/ClienteInput'
  *         - type: object
  *           properties:
  *             id: { type: string, format: uuid }
- *             documento: { type: string, description: Somente dígitos e letras, example: '52998224725' }
+ *             documento: { type: string, description: 'Somente dígitos e letras', example: '52998224725' }
  *             tipo_pessoa: { type: string, enum: [PF, PJ] }
  *             telefone: { type: string, example: '11987654321' }
  *             cep: { type: string, example: '01310100' }
@@ -43,16 +43,6 @@ const { createClienteDto, updateClienteDto, idParamDto, listQueryDto } = require
  *       required: true
  *       schema: { type: string, format: uuid }
  *   responses:
- *     NaoAutenticado:
- *       description: Token ausente, inválido ou expirado
- *       content:
- *         application/json:
- *           schema: { $ref: '#/components/schemas/Erro' }
- *     DadosInvalidos:
- *       description: Dados inválidos
- *       content:
- *         application/json:
- *           schema: { $ref: '#/components/schemas/ErroValidacao' }
  *     ClienteNaoEncontrado:
  *       description: Cliente não encontrado
  *       content:
@@ -95,8 +85,8 @@ function makeClientesRoutes({ clientesController }) {
    *     parameters:
    *       - { in: query, name: page, schema: { type: integer, minimum: 1, default: 1 } }
    *       - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
-   *       - { in: query, name: nome, description: Busca parcial sem diferenciar maiúsculas, schema: { type: string } }
-   *       - { in: query, name: documento, description: CPF ou CNPJ exato, com ou sem máscara, schema: { type: string } }
+   *       - { in: query, name: nome, description: 'Busca parcial sem diferenciar maiúsculas', schema: { type: string } }
+   *       - { in: query, name: documento, description: 'CPF ou CNPJ exato, com ou sem máscara', schema: { type: string } }
    *     responses:
    *       200:
    *         description: Página de clientes
@@ -167,6 +157,11 @@ function makeClientesRoutes({ clientesController }) {
    *       400: { $ref: '#/components/responses/DadosInvalidos' }
    *       401: { $ref: '#/components/responses/NaoAutenticado' }
    *       404: { $ref: '#/components/responses/ClienteNaoEncontrado' }
+   *       409:
+   *         description: 'Cliente ainda em uso (ex.: possui veículos ativos)'
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Erro' }
    */
   router.get('/:id', validateRequest({ params: idParamDto }), clientesController.getById);
   router.put('/:id', validateRequest({ params: idParamDto, body: updateClienteDto }), clientesController.update);

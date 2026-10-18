@@ -17,6 +17,16 @@ const swaggerSpec = swaggerJsdoc({
           bearerFormat: 'JWT',
         },
       },
+      responses: {
+        NaoAutenticado: {
+          description: 'Token ausente, inválido ou expirado',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/Erro' } } },
+        },
+        DadosInvalidos: {
+          description: 'Dados inválidos',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/ErroValidacao' } } },
+        },
+      },
       schemas: {
         Erro: {
           type: 'object',

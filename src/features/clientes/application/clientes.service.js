@@ -5,7 +5,11 @@ const { Documento } = require('../domain/documento.vo');
 const NOT_FOUND = 'Cliente não encontrado';
 const DUPLICATED = 'Já existe um cliente com este documento';
 
-function makeClientesService({ clientesRepository }) {
+/**
+ * removalGuards: funções `(clienteId) => motivo | null` registradas por outros slices
+ * (ex.: veiculos) para impedir a remoção de um cliente ainda em uso, sem que clientes dependa deles.
+ */
+function makeClientesService({ clientesRepository, removalGuards = [] }) {
   async function getById(id) {
     const cliente = await clientesRepository.findById(id);
     if (!cliente) throw new NotFoundError(NOT_FOUND);
@@ -41,6 +45,11 @@ function makeClientesService({ clientesRepository }) {
     },
 
     async remove(id) {
+      await getById(id);
+      for (const guard of removalGuards) {
+        const reason = await guard(id);
+        if (reason) throw new ConflictError(reason);
+      }
       const removed = await clientesRepository.delete(id);
       if (!removed) throw new NotFoundError(NOT_FOUND);
     },

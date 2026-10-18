@@ -4,7 +4,7 @@ const { CPF, CNPJ, buildCliente, buildClientePayload } = require('../clientes.fi
 
 const cliente = buildCliente();
 
-const setup = () => {
+const setup = ({ removalGuards } = {}) => {
   const clientesRepository = {
     create: jest.fn(async (data) => ({ id: cliente.id, ...data })),
     findById: jest.fn().mockResolvedValue(cliente),
@@ -13,7 +13,7 @@ const setup = () => {
     update: jest.fn(async (id, data) => ({ id, ...data })),
     delete: jest.fn().mockResolvedValue(true),
   };
-  return { service: makeClientesService({ clientesRepository }), clientesRepository };
+  return { service: makeClientesService({ clientesRepository, removalGuards }), clientesRepository };
 };
 
 describe('clientesService', () => {
@@ -137,9 +137,35 @@ describe('clientesService', () => {
 
     it('gera NotFoundError quando não existe', async () => {
       const { service, clientesRepository } = setup();
+      clientesRepository.findById.mockResolvedValue(null);
+
+      await expect(service.remove(cliente.id)).rejects.toThrow(NotFoundError);
+      expect(clientesRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('gera NotFoundError se o cliente sumir entre a busca e a remoção', async () => {
+      const { service, clientesRepository } = setup();
       clientesRepository.delete.mockResolvedValue(false);
 
       await expect(service.remove(cliente.id)).rejects.toThrow(NotFoundError);
+    });
+
+    it('consulta os guards e remove quando nenhum bloqueia', async () => {
+      const guard = jest.fn().mockResolvedValue(null);
+      const { service, clientesRepository } = setup({ removalGuards: [guard] });
+
+      await service.remove(cliente.id);
+
+      expect(guard).toHaveBeenCalledWith(cliente.id);
+      expect(clientesRepository.delete).toHaveBeenCalledWith(cliente.id);
+    });
+
+    it('gera ConflictError com o motivo do guard que bloqueia', async () => {
+      const guards = [jest.fn().mockResolvedValue(null), jest.fn().mockResolvedValue('Cliente possui veículos ativos')];
+      const { service, clientesRepository } = setup({ removalGuards: guards });
+
+      await expect(service.remove(cliente.id)).rejects.toThrow(new ConflictError('Cliente possui veículos ativos'));
+      expect(clientesRepository.delete).not.toHaveBeenCalled();
     });
   });
 });
