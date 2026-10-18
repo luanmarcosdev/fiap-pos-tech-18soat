@@ -42,20 +42,19 @@ class PecasService {
     if (!removed) throw new NotFoundError(NOT_FOUND);
   }
 
-  /** "Verificar Estoque": há quantidade suficiente? */
-  async hasStock(id, quantidade) {
+  async verificarEstoque(id, quantidade) {
     const peca = new Peca(await this.#findOrFail(id));
-    return peca.hasStock(quantidade);
+    return peca.temEstoque(quantidade);
   }
 
-  /** "Peça/Insumo Adquirido": entrada de estoque. */
-  async registerEntry(id, quantidade) {
-    return this.#changeStock(id, (peca) => peca.registerEntry(quantidade));
+  /** Evento "Peça/Insumo Adquirido". */
+  async registrarEntrada(id, quantidade) {
+    return this.#changeStock(id, (peca) => peca.registrarEntrada(quantidade));
   }
 
-  /** "Baixar Estoque": lança ConflictError se não houver quantidade suficiente. */
-  async consume(id, quantidade) {
-    return this.#changeStock(id, (peca) => peca.consume(quantidade));
+  /** Lança ConflictError se não houver quantidade suficiente. */
+  async baixarEstoque(id, quantidade) {
+    return this.#changeStock(id, (peca) => peca.baixarEstoque(quantidade));
   }
 
   async #findOrFail(id) {

@@ -137,18 +137,18 @@ describe('interface pública (index.js)', () => {
     await expect(pecas.getPecaById(peca.id)).resolves.toEqual(view);
   });
 
-  it('hasPecaInStock (Verificar Estoque)', async () => {
+  it('verificarEstoquePeca (Verificar Estoque)', async () => {
     pecasRepository.findById.mockResolvedValue(peca);
 
-    await expect(pecas.hasPecaInStock(peca.id, 10)).resolves.toBe(true);
-    await expect(pecas.hasPecaInStock(peca.id, 11)).resolves.toBe(false);
+    await expect(pecas.verificarEstoquePeca(peca.id, 10)).resolves.toBe(true);
+    await expect(pecas.verificarEstoquePeca(peca.id, 11)).resolves.toBe(false);
   });
 
-  it('consumePecaStock (Baixar Estoque) desconta ou gera ConflictError', async () => {
+  it('baixarEstoquePeca (Baixar Estoque) desconta ou gera ConflictError', async () => {
     mockUpdateStock(peca);
 
-    await expect(pecas.consumePecaStock(peca.id, 3)).resolves.toMatchObject({ quantidade_estoque: 7 });
-    await expect(pecas.consumePecaStock(peca.id, 11)).rejects.toMatchObject({
+    await expect(pecas.baixarEstoquePeca(peca.id, 3)).resolves.toMatchObject({ quantidade_estoque: 7 });
+    await expect(pecas.baixarEstoquePeca(peca.id, 11)).rejects.toMatchObject({
       status: 409,
       message: 'Estoque insuficiente',
     });

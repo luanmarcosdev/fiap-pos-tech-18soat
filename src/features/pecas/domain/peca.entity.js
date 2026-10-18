@@ -38,18 +38,18 @@ class Peca {
     return this.#quantidadeEstoque <= this.#estoqueMinimo;
   }
 
-  hasStock(quantidade) {
+  temEstoque(quantidade) {
     assertQuantidade(quantidade);
     return quantidade <= this.#quantidadeEstoque;
   }
 
-  registerEntry(quantidade) {
+  registrarEntrada(quantidade) {
     assertQuantidade(quantidade);
     this.#quantidadeEstoque += quantidade;
   }
 
-  consume(quantidade) {
-    if (!this.hasStock(quantidade)) throw new ConflictError('Estoque insuficiente');
+  baixarEstoque(quantidade) {
+    if (!this.temEstoque(quantidade)) throw new ConflictError('Estoque insuficiente');
     this.#quantidadeEstoque -= quantidade;
   }
 

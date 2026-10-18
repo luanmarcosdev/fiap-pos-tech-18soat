@@ -95,21 +95,21 @@ describe('pecasService', () => {
   });
 
   describe('operações de estoque', () => {
-    it('hasStock (Verificar Estoque)', async () => {
+    it('verificarEstoque (Verificar Estoque)', async () => {
       const { service } = setup();
 
-      await expect(service.hasStock(peca.id, 10)).resolves.toBe(true);
-      await expect(service.hasStock(peca.id, 11)).resolves.toBe(false);
-      await expect(setup(null).service.hasStock(peca.id, 1)).rejects.toThrow(NotFoundError);
+      await expect(service.verificarEstoque(peca.id, 10)).resolves.toBe(true);
+      await expect(service.verificarEstoque(peca.id, 11)).resolves.toBe(false);
+      await expect(setup(null).service.verificarEstoque(peca.id, 1)).rejects.toThrow(NotFoundError);
     });
 
-    it('registerEntry e consume gravam o novo estoque', async () => {
+    it('registrarEntrada e baixarEstoque gravam o novo estoque', async () => {
       const { service, state } = setup();
 
-      const entry = await service.registerEntry(peca.id, 5);
+      const entry = await service.registrarEntrada(peca.id, 5);
       expect(entry).toMatchObject({ quantidade_estoque: 15, abaixo_minimo: false });
 
-      const consumed = await service.consume(peca.id, 13);
+      const consumed = await service.baixarEstoque(peca.id, 13);
       expect(state().quantidade_estoque).toBe(2);
       expect(consumed.abaixo_minimo).toBe(true);
     });
@@ -117,13 +117,13 @@ describe('pecasService', () => {
     it('propaga o erro da entidade sem gravar', async () => {
       const { service, state } = setup();
 
-      await expect(service.consume(peca.id, 11)).rejects.toThrow(new ConflictError('Estoque insuficiente'));
-      await expect(service.registerEntry(peca.id, 0)).rejects.toThrow(ValidationError);
+      await expect(service.baixarEstoque(peca.id, 11)).rejects.toThrow(new ConflictError('Estoque insuficiente'));
+      await expect(service.registrarEntrada(peca.id, 0)).rejects.toThrow(ValidationError);
       expect(state().quantidade_estoque).toBe(10);
     });
 
     it('gera NotFoundError quando a peça não existe', async () => {
-      await expect(setup(null).service.consume(peca.id, 1)).rejects.toThrow(NotFoundError);
+      await expect(setup(null).service.baixarEstoque(peca.id, 1)).rejects.toThrow(NotFoundError);
     });
   });
 });

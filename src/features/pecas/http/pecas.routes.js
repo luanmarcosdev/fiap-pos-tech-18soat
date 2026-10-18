@@ -187,7 +187,7 @@ function createPecasRouter({ pecasController }) {
   router.post(
     '/:id/entradas',
     validateRequest({ params: idParamDto, body: entradaDto }),
-    pecasController.registerEntry,
+    pecasController.registrarEntrada,
   );
 
   return router;

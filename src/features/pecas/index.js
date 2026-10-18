@@ -10,8 +10,8 @@ module.exports = {
   routes: createPecasRouter({ pecasController }),
 
   // API pública para o orcamento ("Verificar Estoque" e "Baixar Estoque"). Lançam NotFoundError;
-  // consumePecaStock lança ConflictError ('Estoque insuficiente')
+  // baixarEstoquePeca lança ConflictError ('Estoque insuficiente')
   getPecaById: (id) => pecasService.getById(id),
-  hasPecaInStock: (id, quantidade) => pecasService.hasStock(id, quantidade),
-  consumePecaStock: (id, quantidade) => pecasService.consume(id, quantidade),
+  verificarEstoquePeca: (id, quantidade) => pecasService.verificarEstoque(id, quantidade),
+  baixarEstoquePeca: (id, quantidade) => pecasService.baixarEstoque(id, quantidade),
 };
