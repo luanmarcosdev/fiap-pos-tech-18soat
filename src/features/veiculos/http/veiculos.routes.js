@@ -51,7 +51,7 @@ const { createVeiculoDto, updateVeiculoDto, idParamDto, listQueryDto } = require
  *         application/json:
  *           schema: { $ref: '#/components/schemas/Erro' }
  */
-function makeVeiculosRoutes({ veiculosController }) {
+function createVeiculosRouter({ veiculosController }) {
   const router = Router();
 
   /**
@@ -164,4 +164,4 @@ function makeVeiculosRoutes({ veiculosController }) {
   return router;
 }
 
-module.exports = { makeVeiculosRoutes };
+module.exports = { createVeiculosRouter };

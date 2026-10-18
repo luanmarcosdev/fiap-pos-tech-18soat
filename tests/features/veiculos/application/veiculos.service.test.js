@@ -1,4 +1,4 @@
-const { makeVeiculosService } = require('@src/features/veiculos/application/veiculos.service');
+const { VeiculosService } = require('@src/features/veiculos/application/veiculos.service');
 const { ConflictError, NotFoundError, UnprocessableError, ValidationError } = require('@src/shared/errors');
 const { PLACA, CLIENTE_ID, buildVeiculo, buildVeiculoPayload } = require('../veiculos.fixtures');
 
@@ -14,7 +14,7 @@ const setup = () => {
     delete: jest.fn().mockResolvedValue(true),
   };
   const getClienteById = jest.fn().mockResolvedValue({ id: CLIENTE_ID });
-  const service = makeVeiculosService({ veiculosRepository, getClienteById });
+  const service = new VeiculosService({ veiculosRepository, getClienteById });
   return { service, veiculosRepository, getClienteById };
 };
 
