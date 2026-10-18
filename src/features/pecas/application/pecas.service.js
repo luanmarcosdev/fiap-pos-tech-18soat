@@ -5,63 +5,90 @@ const { Peca } = require('../domain/peca.entity');
 const NOT_FOUND = 'Peça não encontrada';
 const DUPLICATED = 'Já existe uma peça com este código';
 
-// campo calculado pela entidade, exposto junto com os dados da peça
-function toView(data) {
-  return { ...data, abaixo_minimo: new Peca(data).abaixoDoMinimo };
-}
+class PecasService {
+  #pecasRepository;
 
-function makePecasService({ pecasRepository }) {
-  async function findOrFail(id) {
-    const data = await pecasRepository.findById(id);
-    if (!data) throw new NotFoundError(NOT_FOUND);
-    return data;
+  constructor({ pecasRepository }) {
+    this.#pecasRepository = pecasRepository;
   }
 
-  async function changeStock(id, operation) {
-    const updated = await pecasRepository.updateStock(id, (data) => {
+  async getById(id) {
+    const peca = await this.#findOrFail(id);
+    return this.#toView(peca);
+  }
+
+  async create(payload) {
+    await this.#ensureCodigoIsAvailable(payload.codigo);
+    const peca = await this.#pecasRepository.create(payload);
+    return this.#toView(peca);
+  }
+
+  async list({ page, limit, ...filtros }) {
+    const { rows, count } = await this.#pecasRepository.findAll({ page, limit, filtros });
+    const pecas = rows.map((peca) => this.#toView(peca));
+    return paginate(pecas, count, page, limit);
+  }
+
+  /** Dados cadastrais e preço; o estoque só muda pelas operações de estoque abaixo. */
+  async update(id, payload) {
+    await this.#findOrFail(id);
+    await this.#ensureCodigoIsAvailable(payload.codigo, id);
+    const peca = await this.#pecasRepository.update(id, payload);
+    return this.#toView(peca);
+  }
+
+  async remove(id) {
+    const removed = await this.#pecasRepository.delete(id);
+    if (!removed) throw new NotFoundError(NOT_FOUND);
+  }
+
+  /** "Verificar Estoque": há quantidade suficiente? */
+  async hasStock(id, quantidade) {
+    const peca = new Peca(await this.#findOrFail(id));
+    return peca.hasStock(quantidade);
+  }
+
+  /** "Peça/Insumo Adquirido": entrada de estoque. */
+  async registerEntry(id, quantidade) {
+    return this.#changeStock(id, (peca) => peca.registerEntry(quantidade));
+  }
+
+  /** "Baixar Estoque": lança ConflictError se não houver quantidade suficiente. */
+  async consume(id, quantidade) {
+    return this.#changeStock(id, (peca) => peca.consume(quantidade));
+  }
+
+  async #findOrFail(id) {
+    const peca = await this.#pecasRepository.findById(id);
+    if (!peca) throw new NotFoundError(NOT_FOUND);
+    return peca;
+  }
+
+  /** O código não pode pertencer a outra peça. `pecaId` é a própria peça numa atualização. */
+  async #ensureCodigoIsAvailable(codigo, pecaId = null) {
+    const owner = await this.#pecasRepository.findByCodigo(codigo);
+    if (owner && owner.id !== pecaId) throw new ConflictError(DUPLICATED);
+  }
+
+  /**
+   * Aplica uma operação da entidade sobre a peça com a linha travada no banco (ver updateStock),
+   * para que duas operações simultâneas não leiam o mesmo estoque.
+   */
+  async #changeStock(id, operation) {
+    const updated = await this.#pecasRepository.updateStock(id, (data) => {
       const peca = new Peca(data);
       operation(peca);
       return peca.toStock();
     });
     if (!updated) throw new NotFoundError(NOT_FOUND);
-    return toView(updated);
+    return this.#toView(updated);
   }
 
-  return {
-    async getById(id) {
-      return toView(await findOrFail(id));
-    },
-
-    async create(payload) {
-      if (await pecasRepository.findByCodigo(payload.codigo)) throw new ConflictError(DUPLICATED);
-      return toView(await pecasRepository.create(payload));
-    },
-
-    async list({ page, limit, ...filtros }) {
-      const { rows, count } = await pecasRepository.findAll({ page, limit, filtros });
-      return paginate(rows.map(toView), count, page, limit);
-    },
-
-    // dados cadastrais e preço; o estoque só muda pelas operações abaixo
-    async update(id, payload) {
-      await findOrFail(id);
-      const owner = await pecasRepository.findByCodigo(payload.codigo);
-      if (owner && owner.id !== id) throw new ConflictError(DUPLICATED);
-      return toView(await pecasRepository.update(id, payload));
-    },
-
-    async remove(id) {
-      const removed = await pecasRepository.delete(id);
-      if (!removed) throw new NotFoundError(NOT_FOUND);
-    },
-
-    async hasStock(id, quantidade) {
-      return new Peca(await findOrFail(id)).hasStock(quantidade);
-    },
-
-    registerEntry: (id, quantidade) => changeStock(id, (peca) => peca.registerEntry(quantidade)),
-    consume: (id, quantidade) => changeStock(id, (peca) => peca.consume(quantidade)),
-  };
+  /** Dados da peça mais o campo calculado pela entidade. */
+  #toView(data) {
+    const peca = new Peca(data);
+    return { ...data, abaixo_minimo: peca.abaixoDoMinimo };
+  }
 }
 
-module.exports = { makePecasService };
+module.exports = { PecasService };

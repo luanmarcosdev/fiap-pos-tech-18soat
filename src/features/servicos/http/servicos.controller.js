@@ -1,26 +1,34 @@
-function makeServicosController({ servicosService }) {
-  return {
-    async create(req, res) {
-      res.status(201).json(await servicosService.create(req.body));
-    },
+class ServicosController {
+  #servicosService;
 
-    async list(req, res) {
-      res.status(200).json(await servicosService.list(req.validatedQuery));
-    },
+  constructor({ servicosService }) {
+    this.#servicosService = servicosService;
+  }
 
-    async getById(req, res) {
-      res.status(200).json(await servicosService.getById(req.params.id));
-    },
+  create = async (req, res) => {
+    const servico = await this.#servicosService.create(req.body);
+    res.status(201).json(servico);
+  };
 
-    async update(req, res) {
-      res.status(200).json(await servicosService.update(req.params.id, req.body));
-    },
+  list = async (req, res) => {
+    const servicos = await this.#servicosService.list(req.validatedQuery);
+    res.status(200).json(servicos);
+  };
 
-    async remove(req, res) {
-      await servicosService.remove(req.params.id);
-      res.status(204).end();
-    },
+  getById = async (req, res) => {
+    const servico = await this.#servicosService.getById(req.params.id);
+    res.status(200).json(servico);
+  };
+
+  update = async (req, res) => {
+    const servico = await this.#servicosService.update(req.params.id, req.body);
+    res.status(200).json(servico);
+  };
+
+  remove = async (req, res) => {
+    await this.#servicosService.remove(req.params.id);
+    res.status(204).end();
   };
 }
 
-module.exports = { makeServicosController };
+module.exports = { ServicosController };

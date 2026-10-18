@@ -1,4 +1,4 @@
-const { makePecasService } = require('@src/features/pecas/application/pecas.service');
+const { PecasService } = require('@src/features/pecas/application/pecas.service');
 const { ConflictError, NotFoundError, ValidationError } = require('@src/shared/errors');
 const { buildPeca, buildPecaPayload } = require('../pecas.fixtures');
 
@@ -20,7 +20,7 @@ const setup = (stored = peca) => {
     }),
     delete: jest.fn().mockResolvedValue(true),
   };
-  return { service: makePecasService({ pecasRepository }), pecasRepository, state: () => current };
+  return { service: new PecasService({ pecasRepository }), pecasRepository, state: () => current };
 };
 
 describe('pecasService', () => {

@@ -1,26 +1,34 @@
-function makeClientesController({ clientesService }) {
-  return {
-    async create(req, res) {
-      res.status(201).json(await clientesService.create(req.body));
-    },
+class ClientesController {
+  #clientesService;
 
-    async list(req, res) {
-      res.status(200).json(await clientesService.list(req.validatedQuery));
-    },
+  constructor({ clientesService }) {
+    this.#clientesService = clientesService;
+  }
 
-    async getById(req, res) {
-      res.status(200).json(await clientesService.getById(req.params.id));
-    },
+  create = async (req, res) => {
+    const cliente = await this.#clientesService.create(req.body);
+    res.status(201).json(cliente);
+  };
 
-    async update(req, res) {
-      res.status(200).json(await clientesService.update(req.params.id, req.body));
-    },
+  list = async (req, res) => {
+    const clientes = await this.#clientesService.list(req.validatedQuery);
+    res.status(200).json(clientes);
+  };
 
-    async remove(req, res) {
-      await clientesService.remove(req.params.id);
-      res.status(204).end();
-    },
+  getById = async (req, res) => {
+    const cliente = await this.#clientesService.getById(req.params.id);
+    res.status(200).json(cliente);
+  };
+
+  update = async (req, res) => {
+    const cliente = await this.#clientesService.update(req.params.id, req.body);
+    res.status(200).json(cliente);
+  };
+
+  remove = async (req, res) => {
+    await this.#clientesService.remove(req.params.id);
+    res.status(204).end();
   };
 }
 
-module.exports = { makeClientesController };
+module.exports = { ClientesController };

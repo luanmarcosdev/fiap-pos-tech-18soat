@@ -46,7 +46,7 @@ const { createServicoDto, updateServicoDto, idParamDto, listQueryDto } = require
  *         application/json:
  *           schema: { $ref: '#/components/schemas/Erro' }
  */
-function makeServicosRoutes({ servicosController }) {
+function createServicosRouter({ servicosController }) {
   const router = Router();
 
   /**
@@ -156,4 +156,4 @@ function makeServicosRoutes({ servicosController }) {
   return router;
 }
 
-module.exports = { makeServicosRoutes };
+module.exports = { createServicosRouter };

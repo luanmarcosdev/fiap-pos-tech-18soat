@@ -1,4 +1,4 @@
-const { makeClientesService } = require('@src/features/clientes/application/clientes.service');
+const { ClientesService } = require('@src/features/clientes/application/clientes.service');
 const { ConflictError, NotFoundError, ValidationError } = require('@src/shared/errors');
 const { CPF, CNPJ, buildCliente, buildClientePayload } = require('../clientes.fixtures');
 
@@ -13,7 +13,7 @@ const setup = ({ removalGuards } = {}) => {
     update: jest.fn(async (id, data) => ({ id, ...data })),
     delete: jest.fn().mockResolvedValue(true),
   };
-  return { service: makeClientesService({ clientesRepository, removalGuards }), clientesRepository };
+  return { service: new ClientesService({ clientesRepository, removalGuards }), clientesRepository };
 };
 
 describe('clientesService', () => {

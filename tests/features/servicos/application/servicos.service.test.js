@@ -1,4 +1,4 @@
-const { makeServicosService } = require('@src/features/servicos/application/servicos.service');
+const { ServicosService } = require('@src/features/servicos/application/servicos.service');
 const { ConflictError, NotFoundError } = require('@src/shared/errors');
 const { buildServico, buildServicoPayload } = require('../servicos.fixtures');
 
@@ -13,7 +13,7 @@ const setup = () => {
     update: jest.fn(async (id, data) => ({ id, ...data })),
     delete: jest.fn().mockResolvedValue(true),
   };
-  return { service: makeServicosService({ servicosRepository }), servicosRepository };
+  return { service: new ServicosService({ servicosRepository }), servicosRepository };
 };
 
 describe('servicosService', () => {

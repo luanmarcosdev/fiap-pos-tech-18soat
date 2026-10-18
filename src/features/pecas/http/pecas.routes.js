@@ -51,7 +51,7 @@ const { createPecaDto, updatePecaDto, entradaDto, idParamDto, listQueryDto } = r
  *         application/json:
  *           schema: { $ref: '#/components/schemas/Peca' }
  */
-function makePecasRoutes({ pecasController }) {
+function createPecasRouter({ pecasController }) {
   const router = Router();
 
   /**
@@ -193,4 +193,4 @@ function makePecasRoutes({ pecasController }) {
   return router;
 }
 
-module.exports = { makePecasRoutes };
+module.exports = { createPecasRouter };

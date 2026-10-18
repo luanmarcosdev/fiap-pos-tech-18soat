@@ -4,38 +4,48 @@ const { paginate } = require('../../../shared/pagination');
 const NOT_FOUND = 'Serviço não encontrado';
 const DUPLICATED = 'Já existe um serviço com este nome';
 
-function makeServicosService({ servicosRepository }) {
-  async function getById(id) {
-    const servico = await servicosRepository.findById(id);
+class ServicosService {
+  #servicosRepository;
+
+  constructor({ servicosRepository }) {
+    this.#servicosRepository = servicosRepository;
+  }
+
+  async getById(id) {
+    const servico = await this.#servicosRepository.findById(id);
     if (!servico) throw new NotFoundError(NOT_FOUND);
     return servico;
   }
 
-  return {
-    getById,
+  async create(payload) {
+    await this.#ensureNomeIsAvailable(payload.nome);
+    return this.#servicosRepository.create(payload);
+  }
 
-    async create(payload) {
-      if (await servicosRepository.findByNome(payload.nome)) throw new ConflictError(DUPLICATED);
-      return servicosRepository.create(payload);
-    },
+  async list({ page, limit, nome }) {
+    const { rows, count } = await this.#servicosRepository.findAll({ page, limit, filtros: { nome } });
+    return paginate(rows, count, page, limit);
+  }
 
-    async list({ page, limit, nome }) {
-      const { rows, count } = await servicosRepository.findAll({ page, limit, filtros: { nome } });
-      return paginate(rows, count, page, limit);
-    },
+  async update(id, payload) {
+    await this.getById(id);
+    await this.#ensureNomeIsAvailable(payload.nome, id);
+    return this.#servicosRepository.update(id, payload);
+  }
 
-    async update(id, payload) {
-      await getById(id);
-      const owner = await servicosRepository.findByNome(payload.nome);
-      if (owner && owner.id !== id) throw new ConflictError(DUPLICATED);
-      return servicosRepository.update(id, payload);
-    },
+  async remove(id) {
+    const removed = await this.#servicosRepository.delete(id);
+    if (!removed) throw new NotFoundError(NOT_FOUND);
+  }
 
-    async remove(id) {
-      const removed = await servicosRepository.delete(id);
-      if (!removed) throw new NotFoundError(NOT_FOUND);
-    },
-  };
+  /**
+   * O nome não pode pertencer a outro serviço (sem diferenciar maiúsculas nem acentos).
+   * `servicoId` é o próprio serviço numa atualização.
+   */
+  async #ensureNomeIsAvailable(nome, servicoId = null) {
+    const owner = await this.#servicosRepository.findByNome(nome);
+    if (owner && owner.id !== servicoId) throw new ConflictError(DUPLICATED);
+  }
 }
 
-module.exports = { makeServicosService };
+module.exports = { ServicosService };

@@ -1,6 +1,6 @@
 const { UnauthorizedError } = require('../../../shared/errors');
 
-function makeAuthenticate({ tokenService }) {
+function createAuthenticateMiddleware({ tokenService }) {
   return function authenticate(req, res, next) {
     const [scheme, token] = (req.get('authorization') || '').split(' ');
 
@@ -18,4 +18,4 @@ function makeAuthenticate({ tokenService }) {
   };
 }
 
-module.exports = { makeAuthenticate };
+module.exports = { createAuthenticateMiddleware };

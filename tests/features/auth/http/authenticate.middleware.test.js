@@ -1,9 +1,9 @@
 const jwt = require('jsonwebtoken');
-const { makeAuthenticate } = require('@src/features/auth/http/authenticate.middleware');
+const { createAuthenticateMiddleware } = require('@src/features/auth/http/authenticate.middleware');
 const tokenService = require('@src/features/auth/infra/token.service');
 const { UnauthorizedError } = require('@src/shared/errors');
 
-const authenticate = makeAuthenticate({ tokenService });
+const authenticate = createAuthenticateMiddleware({ tokenService });
 
 const run = (authorization) => {
   const req = { get: jest.fn().mockReturnValue(authorization) };
