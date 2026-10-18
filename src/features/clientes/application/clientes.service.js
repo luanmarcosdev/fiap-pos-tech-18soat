@@ -5,55 +5,69 @@ const { Documento } = require('../domain/documento.vo');
 const NOT_FOUND = 'Cliente não encontrado';
 const DUPLICATED = 'Já existe um cliente com este documento';
 
-/**
- * removalGuards: funções `(clienteId) => motivo | null` registradas por outros slices
- * (ex.: veiculos) para impedir a remoção de um cliente ainda em uso, sem que clientes dependa deles.
- */
-function makeClientesService({ clientesRepository, removalGuards = [] }) {
-  async function getById(id) {
-    const cliente = await clientesRepository.findById(id);
+class ClientesService {
+  #clientesRepository;
+  #removalGuards;
+
+  /**
+   * removalGuards: funções `(clienteId) => motivo | null` registradas por outros slices
+   * (ex.: veiculos) para impedir a remoção de um cliente ainda em uso, sem que clientes dependa deles.
+   * A lista é compartilhada com o index.js, que continua registrando guards depois da criação.
+   */
+  constructor({ clientesRepository, removalGuards = [] }) {
+    this.#clientesRepository = clientesRepository;
+    this.#removalGuards = removalGuards;
+  }
+
+  async getById(id) {
+    const cliente = await this.#clientesRepository.findById(id);
     if (!cliente) throw new NotFoundError(NOT_FOUND);
     return cliente;
   }
 
-  // documento normalizado + tipo_pessoa derivado: o tipo nunca vem do payload
-  function withDocumento(payload) {
-    const documento = Documento.create(payload.documento);
-    return { documento, data: { ...payload, documento: documento.valor, tipo_pessoa: documento.tipoPessoa } };
+  async create(payload) {
+    const data = this.#buildClienteData(payload);
+    await this.#ensureDocumentoIsAvailable(data.documento);
+    return this.#clientesRepository.create(data);
   }
 
-  return {
-    getById,
+  async list({ page, limit, nome, documento }) {
+    const { rows, count } = await this.#clientesRepository.findAll({ page, limit, filtros: { nome, documento } });
+    return paginate(rows, count, page, limit);
+  }
 
-    async create(payload) {
-      const { documento, data } = withDocumento(payload);
-      if (await clientesRepository.findByDocumento(documento.valor)) throw new ConflictError(DUPLICATED);
-      return clientesRepository.create(data);
-    },
+  async update(id, payload) {
+    await this.getById(id);
+    const data = this.#buildClienteData(payload);
+    await this.#ensureDocumentoIsAvailable(data.documento, id);
+    return this.#clientesRepository.update(id, data);
+  }
 
-    async list({ page, limit, nome, documento }) {
-      const { rows, count } = await clientesRepository.findAll({ page, limit, filtros: { nome, documento } });
-      return paginate(rows, count, page, limit);
-    },
+  async remove(id) {
+    await this.getById(id);
+    await this.#ensureNotInUse(id);
+    const removed = await this.#clientesRepository.delete(id);
+    if (!removed) throw new NotFoundError(NOT_FOUND);
+  }
 
-    async update(id, payload) {
-      await getById(id);
-      const { documento, data } = withDocumento(payload);
-      const owner = await clientesRepository.findByDocumento(documento.valor);
-      if (owner && owner.id !== id) throw new ConflictError(DUPLICATED);
-      return clientesRepository.update(id, data);
-    },
+  /** Dados prontos para gravar: documento sem máscara e tipo_pessoa derivado dele (nunca vem do payload). */
+  #buildClienteData(payload) {
+    const documento = Documento.create(payload.documento);
+    return { ...payload, documento: documento.valor, tipo_pessoa: documento.tipoPessoa };
+  }
 
-    async remove(id) {
-      await getById(id);
-      for (const guard of removalGuards) {
-        const reason = await guard(id);
-        if (reason) throw new ConflictError(reason);
-      }
-      const removed = await clientesRepository.delete(id);
-      if (!removed) throw new NotFoundError(NOT_FOUND);
-    },
-  };
+  /** O documento não pode pertencer a outro cliente. `clienteId` é o próprio cliente numa atualização. */
+  async #ensureDocumentoIsAvailable(documento, clienteId = null) {
+    const owner = await this.#clientesRepository.findByDocumento(documento);
+    if (owner && owner.id !== clienteId) throw new ConflictError(DUPLICATED);
+  }
+
+  async #ensureNotInUse(clienteId) {
+    for (const guard of this.#removalGuards) {
+      const reason = await guard(clienteId);
+      if (reason) throw new ConflictError(reason);
+    }
+  }
 }
 
-module.exports = { makeClientesService };
+module.exports = { ClientesService };
