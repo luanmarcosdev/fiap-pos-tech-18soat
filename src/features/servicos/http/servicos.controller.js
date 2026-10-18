@@ -1,7 +1,3 @@
-/**
- * Os handlers são arrow functions para manter o `this` quando o Express os recebe soltos:
- * `router.post('/', servicosController.create)`.
- */
 class ServicosController {
   #servicosService;
 
