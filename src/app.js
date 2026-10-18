@@ -6,6 +6,7 @@ const health = require('./features/health');
 const auth = require('./features/auth');
 const clientes = require('./features/clientes');
 const veiculos = require('./features/veiculos');
+const servicos = require('./features/servicos');
 
 // create express app
 const app = express();
@@ -25,6 +26,7 @@ api.use(auth.routes);
 // rotas protegidas
 api.use('/clientes', auth.authenticate, clientes.routes);
 api.use('/veiculos', auth.authenticate, veiculos.routes);
+api.use('/servicos', auth.authenticate, servicos.routes);
 
 // API called with /api prefix
 app.use('/api', api);
