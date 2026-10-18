@@ -13,7 +13,7 @@ describe('Peca', () => {
   it('usa zero como padrão e expõe id e estoque', () => {
     const p = new Peca({ id: 'p1' });
 
-    expect(p.toStock()).toEqual({ quantidade_estoque: 0 });
+    expect(p.quantidadeEstoque).toBe(0);
     expect(p.id).toBe('p1');
     expect(peca().quantidadeEstoque).toBe(10);
   });
@@ -31,7 +31,7 @@ describe('Peca', () => {
     const p = peca();
     p.registrarEntrada(5);
 
-    expect(p.toStock()).toEqual({ quantidade_estoque: 15 });
+    expect(p.quantidadeEstoque).toBe(15);
   });
 
   describe('baixarEstoque (Baixar Estoque)', () => {

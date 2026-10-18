@@ -52,11 +52,6 @@ class Peca {
     if (!this.temEstoque(quantidade)) throw new ConflictError('Estoque insuficiente');
     this.#quantidadeEstoque -= quantidade;
   }
-
-  /** Campos persistidos que as operações de estoque alteram. */
-  toStock() {
-    return { quantidade_estoque: this.#quantidadeEstoque };
-  }
 }
 
 module.exports = { Peca };
