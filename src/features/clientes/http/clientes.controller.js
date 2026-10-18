@@ -10,19 +10,23 @@ class ClientesController {
   }
 
   create = async (req, res) => {
-    res.status(201).json(await this.#clientesService.create(req.body));
+    const cliente = await this.#clientesService.create(req.body);
+    res.status(201).json(cliente);
   };
 
   list = async (req, res) => {
-    res.status(200).json(await this.#clientesService.list(req.validatedQuery));
+    const clientes = await this.#clientesService.list(req.validatedQuery);
+    res.status(200).json(clientes);
   };
 
   getById = async (req, res) => {
-    res.status(200).json(await this.#clientesService.getById(req.params.id));
+    const cliente = await this.#clientesService.getById(req.params.id);
+    res.status(200).json(cliente);
   };
 
   update = async (req, res) => {
-    res.status(200).json(await this.#clientesService.update(req.params.id, req.body));
+    const cliente = await this.#clientesService.update(req.params.id, req.body);
+    res.status(200).json(cliente);
   };
 
   remove = async (req, res) => {
