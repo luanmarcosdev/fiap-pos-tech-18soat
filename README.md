@@ -107,20 +107,31 @@ tests/                   # espelha src/ (ex.: tests/features/health/health.test.
 
 As dependências apontam para dentro: `http` e `infra` conhecem `domain`; `application` conhece só `domain` e `shared`; `domain` não conhece ninguém. `domain` e `application` não importam pacotes externos (express, sequelize, zod...).
 
-`application` nunca faz `require` de `infra`: recebe o repository por **factory**, e o `index.js` do slice faz a fiação:
+`application` nunca faz `require` de `infra`: recebe o repository pelo **construtor**, e o `index.js` do slice faz a fiação:
 
 ```js
 // index.js
 const clientesRepository = require('./infra/clientes.repository');
-const clientesService = makeClientesService({ clientesRepository });
+const clientesService = new ClientesService({ clientesRepository });
+const clientesController = new ClientesController({ clientesService });
+
+module.exports = {
+  routes: createClientesRouter({ clientesController }),
+};
 ```
 
 Nos testes unitários basta injetar um fake (`{ create: jest.fn() }`), sem `jest.mock`.
 
+Convenções de cada peça:
+
+- **Service e controller são classes**, com as dependências em campos privados (`#clientesRepository`). Regras auxiliares viram métodos privados com nome de regra (`#ensureDocumentoIsAvailable`), para que cada método público se leia como a regra de negócio.
+- **Handlers do controller são arrow functions** (`create = async (req, res) => { ... }`), porque o Express recebe o método solto (`router.post('/', clientesController.create)`) e uma arrow function mantém o `this`. Cada handler obtém o resultado numa linha e responde na seguinte.
+- **Rotas e middlewares são funções `createX`** (`createClientesRouter`, `createAuthenticateMiddleware`): só montam e devolvem algo do Express, sem estado.
+
 ### Service único × casos de uso
 
-- **Cadastros de apoio** (clientes, veículos, serviços, peças, auth): operações simétricas de CRUD, então um único `application/<slice>.service.js` com `create`, `getById`, `list`, `update`, `remove`.
-- **Agregados core** (atendimento, ordem-servico, orcamento, manutencao): um arquivo por caso de uso, com o nome do comando do event storming (ex.: `application/iniciar-atendimento.js` exportando `makeIniciarAtendimento`).
+- **Cadastros de apoio** (clientes, veículos, serviços, peças, auth): operações simétricas de CRUD, então uma única classe em `application/<slice>.service.js` com `create`, `getById`, `list`, `update`, `remove`.
+- **Agregados core** (atendimento, ordem-servico, orcamento, manutencao): um arquivo por caso de uso em `application/`, com o nome do comando do event storming (ex.: `application/iniciar-atendimento.js`). Policies, que reagem a eventos em vez de serem chamadas pela API, ficam em `application/policies/`.
 
 ### Nomenclatura
 
