@@ -1,18 +1,29 @@
 const { UnauthorizedError } = require('../../../shared/errors');
 
-function makeAuthService({ usuariosRepository, passwordHasher, tokenService }) {
-  return {
-    async login({ usuario, senha }) {
-      const found = await usuariosRepository.findByUsuario(usuario);
-      const valid = found !== null && (await passwordHasher.compare(senha, found.senha_hash));
+class AuthService {
+  #usuariosRepository;
+  #passwordHasher;
+  #tokenService;
 
-      // mesma mensagem para usuário inexistente e senha errada, para não revelar quais usuários existem
-      if (!valid) throw new UnauthorizedError('Credenciais inválidas');
+  constructor({ usuariosRepository, passwordHasher, tokenService }) {
+    this.#usuariosRepository = usuariosRepository;
+    this.#passwordHasher = passwordHasher;
+    this.#tokenService = tokenService;
+  }
 
-      const { token, expiresAt } = tokenService.sign({ sub: found.id, usuario: found.usuario });
-      return { token, tipo: 'Bearer', expiraEm: expiresAt.toISOString() };
-    },
-  };
+  async login({ usuario, senha }) {
+    const found = await this.#usuariosRepository.findByUsuario(usuario);
+    await this.#ensureValidCredentials(found, senha);
+
+    const { token, expiresAt } = this.#tokenService.sign({ sub: found.id, usuario: found.usuario });
+    return { token, tipo: 'Bearer', expiraEm: expiresAt.toISOString() };
+  }
+
+  /** Mesma mensagem para usuário inexistente e senha errada, para não revelar quais usuários existem. */
+  async #ensureValidCredentials(usuario, senha) {
+    const valid = usuario !== null && (await this.#passwordHasher.compare(senha, usuario.senha_hash));
+    if (!valid) throw new UnauthorizedError('Credenciais inválidas');
+  }
 }
 
-module.exports = { makeAuthService };
+module.exports = { AuthService };

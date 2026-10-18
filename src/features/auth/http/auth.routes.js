@@ -2,7 +2,7 @@ const { Router } = require('express');
 const { validateRequest } = require('../../../infra/http/validate-request');
 const { loginDto } = require('./auth.dto');
 
-function makeAuthRoutes({ authController }) {
+function createAuthRouter({ authController }) {
   const router = Router();
 
   /**
@@ -60,4 +60,4 @@ function makeAuthRoutes({ authController }) {
   return router;
 }
 
-module.exports = { makeAuthRoutes };
+module.exports = { createAuthRouter };
