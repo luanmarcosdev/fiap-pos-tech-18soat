@@ -1,5 +1,5 @@
-const { Op, fn, col, where: whereFn } = require('sequelize');
-const { escapeLike } = require('../../../infra/database/escape-like');
+const { Op } = require('sequelize');
+const { containsIgnoringAccents, equalsIgnoringAccents } = require('../../../infra/database/text-search');
 const { Servico } = require('./servicos.model');
 
 const toPlain = (model) => (model ? model.toJSON() : null);
@@ -12,14 +12,14 @@ async function findById(id) {
   return toPlain(await Servico.findByPk(id));
 }
 
-// mesma regra do índice único: compara sem diferenciar maiúsculas
+// mesma regra do índice único: compara sem diferenciar maiúsculas nem acentos
 async function findByNome(nome) {
-  return toPlain(await Servico.findOne({ where: whereFn(fn('lower', col('nome')), nome.toLowerCase()) }));
+  return toPlain(await Servico.findOne({ where: equalsIgnoringAccents('nome', nome) }));
 }
 
 async function findAll({ page, limit, filtros = {} }) {
   const where = {};
-  if (filtros.nome) where.nome = { [Op.iLike]: `%${escapeLike(filtros.nome)}%` };
+  if (filtros.nome) where[Op.and] = [containsIgnoringAccents('nome', filtros.nome)];
 
   const { rows, count } = await Servico.findAndCountAll({
     where,

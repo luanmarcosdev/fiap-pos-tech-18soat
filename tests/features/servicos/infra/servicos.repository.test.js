@@ -9,7 +9,8 @@ jest.mock('@src/features/servicos/infra/servicos.model', () => ({
   },
 }));
 
-const { Op, fn, col, where } = require('sequelize');
+const { Op } = require('sequelize');
+const { containsIgnoringAccents, equalsIgnoringAccents } = require('@src/infra/database/text-search');
 const { Servico } = require('@src/features/servicos/infra/servicos.model');
 const servicosRepository = require('@src/features/servicos/infra/servicos.repository');
 const { buildServico } = require('../servicos.fixtures');
@@ -28,21 +29,21 @@ describe('servicosRepository', () => {
     await expect(servicosRepository.findByNome('TROCA DE ÓLEO')).resolves.toEqual(servico);
   });
 
-  it('findByNome compara sem diferenciar maiúsculas', async () => {
+  it('findByNome compara sem diferenciar maiúsculas nem acentos', async () => {
     Servico.findOne.mockResolvedValue(null);
 
-    await servicosRepository.findByNome('TROCA DE ÓLEO');
+    await servicosRepository.findByNome('TROCA DE OLEO');
 
-    expect(Servico.findOne).toHaveBeenCalledWith({ where: where(fn('lower', col('nome')), 'troca de óleo') });
+    expect(Servico.findOne).toHaveBeenCalledWith({ where: equalsIgnoringAccents('nome', 'TROCA DE OLEO') });
   });
 
-  it('findAll pagina e filtra com ILIKE escapado', async () => {
+  it('findAll pagina e filtra sem diferenciar acentos', async () => {
     Servico.findAndCountAll.mockResolvedValue({ rows: [asModel(servico)], count: 1 });
 
     const result = await servicosRepository.findAll({ page: 2, limit: 5, filtros: { nome: '100%' } });
 
     expect(Servico.findAndCountAll).toHaveBeenCalledWith({
-      where: { nome: { [Op.iLike]: '%100\\%%' } },
+      where: { [Op.and]: [containsIgnoringAccents('nome', '100%')] },
       offset: 5,
       limit: 5,
       order: [['nome', 'ASC']],
