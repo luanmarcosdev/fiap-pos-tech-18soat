@@ -4,6 +4,7 @@ jest.mock('@src/features/veiculos/infra/veiculos.model', () => ({
     findByPk: jest.fn(),
     findOne: jest.fn(),
     findAll: jest.fn(),
+    count: jest.fn(),
     findAndCountAll: jest.fn(),
     update: jest.fn(),
     destroy: jest.fn(),
@@ -38,6 +39,13 @@ describe('veiculosRepository', () => {
 
     await expect(veiculosRepository.findAllByCliente(CLIENTE_ID)).resolves.toEqual([veiculo]);
     expect(Veiculo.findAll).toHaveBeenCalledWith({ where: { cliente_id: CLIENTE_ID }, order: [['placa', 'ASC']] });
+  });
+
+  it('countByCliente conta os veículos ativos do cliente', async () => {
+    Veiculo.count.mockResolvedValue(2);
+
+    await expect(veiculosRepository.countByCliente(CLIENTE_ID)).resolves.toBe(2);
+    expect(Veiculo.count).toHaveBeenCalledWith({ where: { cliente_id: CLIENTE_ID } });
   });
 
   it('findAll pagina e aplica os filtros', async () => {

@@ -19,6 +19,10 @@ async function findAllByCliente(clienteId) {
   return rows.map(toPlain);
 }
 
+async function countByCliente(clienteId) {
+  return Veiculo.count({ where: { cliente_id: clienteId } });
+}
+
 async function findAll({ page, limit, filtros = {} }) {
   const where = {};
   if (filtros.cliente_id) where.cliente_id = filtros.cliente_id;
@@ -49,6 +53,7 @@ module.exports = {
   findById,
   findByPlaca,
   findAllByCliente,
+  countByCliente,
   findAll,
   update,
   delete: destroy,

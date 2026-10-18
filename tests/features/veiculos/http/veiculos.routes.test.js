@@ -133,6 +133,31 @@ describe('/api/veiculos', () => {
   });
 });
 
+describe('DELETE /api/clientes/:id (guard registrado por veiculos)', () => {
+  beforeEach(() => {
+    clientesRepository.delete.mockResolvedValue(true);
+  });
+
+  it('409 quando o cliente possui veículos ativos', async () => {
+    veiculosRepository.countByCliente.mockResolvedValue(1);
+
+    const response = await api.delete(`/api/clientes/${CLIENTE_ID}`);
+
+    expect(response.status).toBe(409);
+    expect(response.body).toEqual({ erro: 'Cliente possui veículos ativos' });
+    expect(veiculosRepository.countByCliente).toHaveBeenCalledWith(CLIENTE_ID);
+    expect(clientesRepository.delete).not.toHaveBeenCalled();
+  });
+
+  it('204 quando o cliente não possui veículos', async () => {
+    veiculosRepository.countByCliente.mockResolvedValue(0);
+
+    const response = await api.delete(`/api/clientes/${CLIENTE_ID}`);
+
+    expect(response.status).toBe(204);
+  });
+});
+
 describe('interface pública (index.js)', () => {
   it('getVeiculoByPlaca normaliza a placa antes de buscar', async () => {
     veiculosRepository.findByPlaca.mockResolvedValue(veiculo);
