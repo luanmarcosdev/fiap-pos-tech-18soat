@@ -1,4 +1,6 @@
 jest.mock('@src/features/clientes/infra/clientes.repository');
+// o app carrega o slice veiculos, que registra um guard de remoção consultando o próprio repository
+jest.mock('@src/features/veiculos/infra/veiculos.repository');
 
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
@@ -160,6 +162,7 @@ describe('/api/clientes', () => {
 
   describe('DELETE /:id', () => {
     it('204 ao remover', async () => {
+      clientesRepository.findById.mockResolvedValue(cliente);
       clientesRepository.delete.mockResolvedValue(true);
 
       const response = await api.delete(`/api/clientes/${cliente.id}`);
@@ -169,7 +172,7 @@ describe('/api/clientes', () => {
     });
 
     it('404 quando não existe', async () => {
-      clientesRepository.delete.mockResolvedValue(false);
+      clientesRepository.findById.mockResolvedValue(null);
 
       const response = await api.delete(`/api/clientes/${cliente.id}`);
 
