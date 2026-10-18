@@ -1,13 +1,13 @@
 const pecasRepository = require('./infra/pecas.repository');
-const { makePecasService } = require('./application/pecas.service');
-const { makePecasController } = require('./http/pecas.controller');
-const { makePecasRoutes } = require('./http/pecas.routes');
+const { PecasService } = require('./application/pecas.service');
+const { PecasController } = require('./http/pecas.controller');
+const { createPecasRouter } = require('./http/pecas.routes');
 
-const pecasService = makePecasService({ pecasRepository });
-const pecasController = makePecasController({ pecasService });
+const pecasService = new PecasService({ pecasRepository });
+const pecasController = new PecasController({ pecasService });
 
 module.exports = {
-  routes: makePecasRoutes({ pecasController }),
+  routes: createPecasRouter({ pecasController }),
 
   // API pública para o orcamento ("Verificar Estoque" e "Baixar Estoque"). Lançam NotFoundError;
   // consumePecaStock lança ConflictError ('Estoque insuficiente')

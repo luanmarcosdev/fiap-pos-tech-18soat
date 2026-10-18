@@ -1,30 +1,43 @@
-function makePecasController({ pecasService }) {
-  return {
-    async create(req, res) {
-      res.status(201).json(await pecasService.create(req.body));
-    },
+/**
+ * Os handlers são arrow functions para manter o `this` quando o Express os recebe soltos:
+ * `router.post('/', pecasController.create)`.
+ */
+class PecasController {
+  #pecasService;
 
-    async list(req, res) {
-      res.status(200).json(await pecasService.list(req.validatedQuery));
-    },
+  constructor({ pecasService }) {
+    this.#pecasService = pecasService;
+  }
 
-    async getById(req, res) {
-      res.status(200).json(await pecasService.getById(req.params.id));
-    },
+  create = async (req, res) => {
+    const peca = await this.#pecasService.create(req.body);
+    res.status(201).json(peca);
+  };
 
-    async update(req, res) {
-      res.status(200).json(await pecasService.update(req.params.id, req.body));
-    },
+  list = async (req, res) => {
+    const pecas = await this.#pecasService.list(req.validatedQuery);
+    res.status(200).json(pecas);
+  };
 
-    async remove(req, res) {
-      await pecasService.remove(req.params.id);
-      res.status(204).end();
-    },
+  getById = async (req, res) => {
+    const peca = await this.#pecasService.getById(req.params.id);
+    res.status(200).json(peca);
+  };
 
-    async registerEntry(req, res) {
-      res.status(200).json(await pecasService.registerEntry(req.params.id, req.body.quantidade));
-    },
+  update = async (req, res) => {
+    const peca = await this.#pecasService.update(req.params.id, req.body);
+    res.status(200).json(peca);
+  };
+
+  remove = async (req, res) => {
+    await this.#pecasService.remove(req.params.id);
+    res.status(204).end();
+  };
+
+  registerEntry = async (req, res) => {
+    const peca = await this.#pecasService.registerEntry(req.params.id, req.body.quantidade);
+    res.status(200).json(peca);
   };
 }
 
-module.exports = { makePecasController };
+module.exports = { PecasController };
