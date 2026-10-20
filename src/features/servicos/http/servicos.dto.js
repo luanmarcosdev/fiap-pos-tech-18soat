@@ -1,10 +1,11 @@
 const { z } = require('zod');
 const { paginationQueryDto } = require('../../../infra/http/pagination');
-const { optionalText } = require('../../../infra/http/dto-helpers');
+const { optionalText, preco } = require('../../../infra/http/dto-helpers');
 
 const createServicoDto = z.object({
   nome: z.string().trim().min(1).max(120),
   descricao: optionalText(2000),
+  preco: preco(),
 });
 
 const updateServicoDto = createServicoDto;

@@ -35,7 +35,7 @@ describe('/api/servicos', () => {
     });
 
     it('400 sem nome', async () => {
-      const response = await api.post('/api/servicos').send({ descricao: 'x' });
+      const response = await api.post('/api/servicos').send({ descricao: 'x', preco: 120 });
 
       expect(response.status).toBe(400);
       expect(response.body.detalhes).toEqual([{ campo: 'nome', mensagem: expect.any(String) }]);
@@ -74,7 +74,7 @@ describe('/api/servicos', () => {
     servicosRepository.update.mockResolvedValue({ ...servico, descricao: null });
     const url = `/api/servicos/${servico.id}`;
 
-    const ok = await api.put(url).send({ nome: 'Troca de óleo' });
+    const ok = await api.put(url).send({ nome: 'Troca de óleo', preco: 120 });
     expect(ok.status).toBe(200);
     expect(ok.body.descricao).toBeNull();
 

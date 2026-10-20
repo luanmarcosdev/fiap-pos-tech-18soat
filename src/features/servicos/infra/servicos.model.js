@@ -11,6 +11,7 @@ const Servico = sequelize.define(
     },
     nome: { type: DataTypes.STRING(120), allowNull: false },
     descricao: { type: DataTypes.TEXT, allowNull: true },
+    preco: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
   },
   {
     tableName: 'servicos',
@@ -23,10 +24,12 @@ const Servico = sequelize.define(
   },
 );
 
-// deleted_at é detalhe do soft delete, não faz parte do serviço exposto pela API
 Servico.prototype.toJSON = function toJSON() {
   const values = { ...this.get() };
+  // deleted_at é detalhe do soft delete, não faz parte do serviço exposto pela API
   delete values.deleted_at;
+  // o driver do Postgres devolve DECIMAL como string para não perder precisão
+  if (values.preco != null) values.preco = Number(values.preco);
   return values;
 };
 

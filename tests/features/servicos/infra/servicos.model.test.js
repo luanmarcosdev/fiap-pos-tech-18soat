@@ -10,4 +10,12 @@ describe('Servico model', () => {
     expect(model.toJSON()).toHaveProperty('created_at');
     expect(model.toJSON()).not.toHaveProperty('deleted_at');
   });
+
+  it('converte o preço DECIMAL (string no driver) em número', () => {
+    expect(Servico.build({ nome: 'Troca de óleo', preco: '120.50' }).toJSON().preco).toBe(120.5);
+  });
+
+  it('mantém preço ausente', () => {
+    expect(Servico.build({ nome: 'Troca de óleo' }).toJSON().preco).toBeUndefined();
+  });
 });
