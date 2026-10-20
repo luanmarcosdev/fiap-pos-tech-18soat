@@ -8,7 +8,7 @@ const { createServicoDto, updateServicoDto, idParamDto, listQueryDto } = require
  *   schemas:
  *     ServicoInput:
  *       type: object
- *       required: [nome]
+ *       required: [nome, preco]
  *       properties:
  *         nome:
  *           type: string
@@ -20,6 +20,12 @@ const { createServicoDto, updateServicoDto, idParamDto, listQueryDto } = require
  *           maxLength: 2000
  *           nullable: true
  *           example: Troca do óleo do motor e do filtro de óleo
+ *         preco:
+ *           type: number
+ *           minimum: 0
+ *           maximum: 99999999.99
+ *           description: 'Preço de tabela; o orçamento guarda uma cópia ao incluir o serviço'
+ *           example: 120
  *     Servico:
  *       allOf:
  *         - $ref: '#/components/schemas/ServicoInput'
