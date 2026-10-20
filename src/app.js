@@ -8,6 +8,7 @@ const clientes = require('./features/clientes');
 const veiculos = require('./features/veiculos');
 const servicos = require('./features/servicos');
 const pecas = require('./features/pecas');
+const ordemServico = require('./features/ordem-servico');
 
 // create express app
 const app = express();
@@ -29,6 +30,7 @@ api.use('/clientes', auth.authenticate, clientes.routes);
 api.use('/veiculos', auth.authenticate, veiculos.routes);
 api.use('/servicos', auth.authenticate, servicos.routes);
 api.use('/pecas', auth.authenticate, pecas.routes);
+api.use('/ordens-servico', auth.authenticate, ordemServico.routes);
 
 // API called with /api prefix
 app.use('/api', api);
