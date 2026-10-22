@@ -47,6 +47,12 @@ class OrdemServico {
     return this.#evento('ServicoAdicionado');
   }
 
+  /** Comando "Adiciona Peças/Insumos": como o de serviço, só vale durante o diagnóstico. */
+  adicionarPeca() {
+    this.#ensureEmDiagnostico('Só é possível adicionar peças e insumos durante o diagnóstico');
+    return this.#evento('PecasInsumosAdicionados');
+  }
+
   #ensureEmDiagnostico(mensagem) {
     if (this.#status !== STATUS.EM_DIAGNOSTICO) throw new ConflictError(mensagem);
   }
