@@ -13,6 +13,11 @@ const toCentavos = (valor) => Math.round(valor * 100);
 
 const VALOR_TOTAL_MAXIMO = 99999999.99; // DECIMAL(10,2) de orcamentos.valor_total
 
+const SEM_ITENS = 'Adicione ao menos um serviço ou peça/insumo antes de concluir o diagnóstico';
+
+const VALIDADE_EM_DIAS = 14;
+const UM_DIA_EM_MS = 24 * 60 * 60 * 1000;
+
 function validarQuantidade(quantidade) {
   if (!Number.isInteger(quantidade) || quantidade <= 0) {
     throw new ValidationError('Quantidade inválida', [
@@ -28,14 +33,24 @@ function validarQuantidade(quantidade) {
  */
 class Orcamento {
   #status;
+  #expiraEm;
   #servicos;
   #pecas;
 
-  constructor({ id, status, servicos = [], pecas = [] }) {
+  constructor({ id, status, expira_em = null, servicos = [], pecas = [] }) {
     if (!Object.values(STATUS).includes(status)) throw new Error(`Status inválido para o orçamento ${id}`);
     this.#status = status;
+    this.#expiraEm = expira_em;
     this.#servicos = [...servicos];
     this.#pecas = [...pecas];
+  }
+
+  get status() {
+    return this.#status;
+  }
+
+  get expiraEm() {
+    return this.#expiraEm;
   }
 
   get valorTotal() {
@@ -69,6 +84,18 @@ class Orcamento {
     return item;
   }
 
+  /**
+   * Policies "Gerar Orçamento" e "Enviar Orçamento": o rascunho vira o orçamento enviado ao cliente, que vale
+   * 14 dias. Já enviado, não faz nada: repetir a conclusão do diagnóstico depois de uma falha não gera de novo.
+   */
+  gerar(agora) {
+    if (this.#status === STATUS.ENVIADO) return;
+    this.#ensureEmDiagnostico();
+    if (this.#servicos.length === 0 && this.#pecas.length === 0) throw new UnprocessableError(SEM_ITENS);
+    this.#status = STATUS.ENVIADO;
+    this.#expiraEm = new Date(agora.getTime() + VALIDADE_EM_DIAS * UM_DIA_EM_MS);
+  }
+
   /** Inclui o item só se o total continuar cabendo no orçamento. */
   #incluir(itens, item) {
     itens.push(item);
@@ -85,4 +112,4 @@ class Orcamento {
   }
 }
 
-module.exports = { Orcamento, STATUS };
+module.exports = { Orcamento, STATUS, SEM_ITENS };
