@@ -1,10 +1,12 @@
 jest.mock('@src/features/ordem-servico/infra/ordens-servico.repository');
 jest.mock('@src/features/clientes/infra/clientes.repository');
+jest.mock('@src/features/veiculos/infra/veiculos.repository');
 
 const request = require('supertest');
 const app = require('@src/app');
 const ordensServicoRepository = require('@src/features/ordem-servico/infra/ordens-servico.repository');
 const clientesRepository = require('@src/features/clientes/infra/clientes.repository');
+const veiculosRepository = require('@src/features/veiculos/infra/veiculos.repository');
 const { signToken } = require('@src/features/auth');
 const { buildOrdemServico } = require('../ordem-servico.fixtures');
 
@@ -64,6 +66,57 @@ describe('/api/ordens-servico', () => {
         erro: 'Só é possível iniciar o diagnóstico de uma ordem de serviço recebida',
       });
       expect(console.info).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('POST /consulta (aberta)', () => {
+    const veiculo = { id: os.veiculo_id, placa: 'ABC1D23', marca: 'Volkswagen', modelo: 'Gol 1.0', ano: 2020 };
+    const consulta = { numero: 42, documento: '529.982.247-25' };
+
+    it('200 sem token, com a visão do cliente', async () => {
+      ordensServicoRepository.findByNumero.mockResolvedValue(os);
+      clientesRepository.findByDocumento.mockResolvedValue({ id: os.cliente_id });
+      veiculosRepository.findAllByCliente.mockResolvedValue([veiculo]);
+
+      const response = await request(app).post('/api/ordens-servico/consulta').send(consulta);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        numero: 42,
+        status: 'RECEBIDA',
+        queixa: 'Barulho ao frear',
+        diagnostico: null,
+        veiculo: { placa: 'ABC1D23', marca: 'Volkswagen', modelo: 'Gol 1.0', ano: 2020 },
+        created_at: os.created_at,
+        updated_at: os.updated_at,
+      });
+      // a normalização do documento é do slice de clientes
+      expect(clientesRepository.findByDocumento).toHaveBeenCalledWith('52998224725');
+    });
+
+    it.each([
+      ['a OS não existe', null, { id: os.cliente_id }],
+      ['o documento não é de nenhum cliente', os, null],
+      ['o documento é de outro cliente', os, { id: 'c0ffee00-0000-4000-8000-000000000001' }],
+    ])('404 idêntico quando %s', async (_, stored, cliente) => {
+      ordensServicoRepository.findByNumero.mockResolvedValue(stored);
+      clientesRepository.findByDocumento.mockResolvedValue(cliente);
+
+      const response = await request(app).post('/api/ordens-servico/consulta').send(consulta);
+
+      expect(response.status).toBe(404);
+      expect(response.body).toEqual({ erro: 'Ordem de serviço não encontrada' });
+    });
+
+    it('400 sem documento', async () => {
+      const response = await request(app).post('/api/ordens-servico/consulta').send({ numero: 42 });
+
+      expect(response.status).toBe(400);
+      expect(response.body.detalhes).toEqual([{ campo: 'documento', mensagem: expect.any(String) }]);
+    });
+
+    it('não abre as rotas protegidas', async () => {
+      expect((await request(app).post(`/api/ordens-servico/${os.id}/iniciar-diagnostico`)).status).toBe(401);
     });
   });
 });

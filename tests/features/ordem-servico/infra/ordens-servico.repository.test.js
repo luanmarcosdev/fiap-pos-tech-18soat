@@ -4,7 +4,7 @@ jest.mock('@src/infra/database/sequelize', () => ({
   sequelize: { transaction: jest.fn((callback) => callback(mockTransaction)) },
 }));
 jest.mock('@src/features/ordem-servico/infra/ordens-servico.model', () => ({
-  OrdemServico: { findByPk: jest.fn() },
+  OrdemServico: { findByPk: jest.fn(), findOne: jest.fn() },
 }));
 
 const { OrdemServico } = require('@src/features/ordem-servico/infra/ordens-servico.model');
@@ -12,6 +12,16 @@ const ordensServicoRepository = require('@src/features/ordem-servico/infra/orden
 const { buildOrdemServico } = require('../ordem-servico.fixtures');
 
 const os = buildOrdemServico();
+
+describe('ordensServicoRepository.findByNumero', () => {
+  it('devolve objeto simples ou null', async () => {
+    OrdemServico.findOne.mockResolvedValueOnce({ toJSON: () => os }).mockResolvedValueOnce(null);
+
+    await expect(ordensServicoRepository.findByNumero(42)).resolves.toEqual(os);
+    await expect(ordensServicoRepository.findByNumero(43)).resolves.toBeNull();
+    expect(OrdemServico.findOne).toHaveBeenCalledWith({ where: { numero: 42 } });
+  });
+});
 
 describe('ordensServicoRepository.updateWithLock', () => {
   it('trava a linha, aplica a mudança e grava na mesma transação', async () => {
