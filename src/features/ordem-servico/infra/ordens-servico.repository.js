@@ -11,6 +11,25 @@ async function findByNumero(numero) {
   return toPlain(await OrdemServico.findOne({ where: { numero } }));
 }
 
+async function findAll({ page, limit, filtros = {} }) {
+  const where = {};
+  if (filtros.status) where.status = filtros.status;
+  if (filtros.cliente_id) where.cliente_id = filtros.cliente_id;
+  if (filtros.veiculo_id) where.veiculo_id = filtros.veiculo_id;
+
+  const { rows, count } = await OrdemServico.findAndCountAll({
+    where,
+    offset: (page - 1) * limit,
+    limit,
+    // numero desempata OS criadas no mesmo instante, para a paginação não repetir nem pular registros
+    order: [
+      ['created_at', 'DESC'],
+      ['numero', 'DESC'],
+    ],
+  });
+  return { rows: rows.map(toPlain), count };
+}
+
 /**
  * Altera a OS de forma segura sob concorrência: trava a linha (SELECT ... FOR NO KEY UPDATE),
  * entrega os dados atuais para `change` (que aplica a regra de domínio e devolve os novos valores)
@@ -31,5 +50,6 @@ async function updateWithLock(id, change) {
 module.exports = {
   findById,
   findByNumero,
+  findAll,
   updateWithLock,
 };
