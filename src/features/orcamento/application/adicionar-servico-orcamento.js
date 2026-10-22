@@ -20,7 +20,7 @@ class AdicionarServicoOrcamento {
     return this.#orcamentosRepository.addServico(ordemServicoId, (data) => {
       const orcamento = new Orcamento(data);
       const item = orcamento.adicionarServico(servico);
-      return { servico: item, valor_total: orcamento.valorTotal };
+      return { item, valor_total: orcamento.valorTotal };
     });
   }
 
