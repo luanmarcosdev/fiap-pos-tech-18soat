@@ -57,6 +57,8 @@ const OrcamentoPeca = sequelize.define(
 
 Orcamento.hasMany(OrcamentoServico, { as: 'servicos', foreignKey: 'orcamento_id' });
 Orcamento.hasMany(OrcamentoPeca, { as: 'pecas', foreignKey: 'orcamento_id' });
+// usado para somar as reservas de peças dos orçamentos enviados
+OrcamentoPeca.belongsTo(Orcamento, { foreignKey: 'orcamento_id' });
 
 function itemToJSON() {
   const values = { ...this.get() };
