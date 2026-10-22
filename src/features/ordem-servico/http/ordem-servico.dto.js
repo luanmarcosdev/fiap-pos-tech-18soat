@@ -11,7 +11,12 @@ const consultaDto = z.object({
   documento: z.string().trim().min(11).max(18),
 });
 
+const adicionarServicoDto = z.object({
+  servico_id: z.uuid(),
+});
+
 module.exports = {
   idParamDto,
   consultaDto,
+  adicionarServicoDto,
 };

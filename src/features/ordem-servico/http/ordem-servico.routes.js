@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const { validateRequest } = require('../../../infra/http/validate-request');
-const { idParamDto, consultaDto } = require('./ordem-servico.dto');
+const { idParamDto, consultaDto, adicionarServicoDto } = require('./ordem-servico.dto');
 
 /**
  * @openapi
@@ -38,6 +38,25 @@ const { idParamDto, consultaDto } = require('./ordem-servico.dto');
  *             marca: { type: string, example: Volkswagen }
  *             modelo: { type: string, example: Gol 1.0 }
  *             ano: { type: integer, example: 2020 }
+ *         created_at: { type: string, format: date-time }
+ *         updated_at: { type: string, format: date-time }
+ *     OrdemServicoOrcamento:
+ *       type: object
+ *       description: 'Orçamento da OS; EM_DIAGNOSTICO enquanto o mecânico adiciona os itens'
+ *       properties:
+ *         id: { type: string, format: uuid }
+ *         ordem_servico_id: { type: string, format: uuid }
+ *         status: { type: string, enum: [EM_DIAGNOSTICO, ENVIADO, APROVADO, REPROVADO, EXPIRADO] }
+ *         valor_total: { type: number, example: 120 }
+ *         expira_em: { type: string, format: date-time, nullable: true }
+ *         servicos:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id: { type: string, format: uuid }
+ *               servico_id: { type: string, format: uuid }
+ *               valor_unitario: { type: number, description: 'Preço do catálogo no momento da inclusão', example: 120 }
  *         created_at: { type: string, format: date-time }
  *         updated_at: { type: string, format: date-time }
  *   parameters:
@@ -85,6 +104,49 @@ function createOrdemServicoRouter({ ordemServicoController }) {
     '/:id/iniciar-diagnostico',
     validateRequest({ params: idParamDto }),
     ordemServicoController.iniciarDiagnostico,
+  );
+
+  /**
+   * @openapi
+   * /ordens-servico/{id}/servicos:
+   *   post:
+   *     tags: [OrdensServico]
+   *     summary: Adiciona um serviço ao orçamento da OS em diagnóstico (copia o preço do catálogo)
+   *     security: [{ bearerAuth: [] }]
+   *     parameters: [{ $ref: '#/components/parameters/OrdemServicoId' }]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [servico_id]
+   *             properties:
+   *               servico_id: { type: string, format: uuid }
+   *     responses:
+   *       201:
+   *         description: Orçamento da OS com os serviços
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/OrdemServicoOrcamento' }
+   *       400: { $ref: '#/components/responses/DadosInvalidos' }
+   *       401: { $ref: '#/components/responses/NaoAutenticado' }
+   *       404: { $ref: '#/components/responses/OrdemServicoNaoEncontrada' }
+   *       409:
+   *         description: 'OS fora do diagnóstico, serviço já adicionado ou orçamento já gerado'
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Erro' }
+   *       422:
+   *         description: Serviço não encontrado
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Erro' }
+   */
+  router.post(
+    '/:id/servicos',
+    validateRequest({ params: idParamDto, body: adicionarServicoDto }),
+    ordemServicoController.adicionarServico,
   );
 
   return router;
