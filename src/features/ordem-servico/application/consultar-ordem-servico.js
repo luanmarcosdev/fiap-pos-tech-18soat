@@ -79,12 +79,13 @@ class ConsultarOrdemServico {
       valor_total,
       expira_em,
       servicos: servicos.map(({ nome, valor_unitario }) => ({ nome, valor_unitario })),
-      pecas: pecas.map(({ nome, tipo, unidade_medida, quantidade, valor_unitario }) => ({
+      pecas: pecas.map(({ nome, tipo, unidade_medida, quantidade, valor_unitario, subtotal }) => ({
         nome,
         tipo,
         unidade_medida,
         quantidade,
         valor_unitario,
+        subtotal,
       })),
     };
   }

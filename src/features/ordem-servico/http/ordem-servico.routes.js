@@ -70,6 +70,7 @@ const {
  *                   unidade_medida: { type: string, example: UN }
  *                   quantidade: { type: integer, example: 2 }
  *                   valor_unitario: { type: number, example: 39.9 }
+ *                   subtotal: { type: number, description: 'quantidade × valor_unitario (calculado)', example: 79.8 }
  *         created_at: { type: string, format: date-time }
  *         updated_at: { type: string, format: date-time }
  *     OrdemServicoOrcamento:
@@ -105,6 +106,7 @@ const {
  *               unidade_medida: { type: string, example: UN }
  *               quantidade: { type: integer, example: 2 }
  *               valor_unitario: { type: number, description: 'Preço do catálogo no momento da inclusão', example: 39.9 }
+ *               subtotal: { type: number, description: 'quantidade × valor_unitario (calculado)', example: 79.8 }
  *               em_estoque:
  *                 type: boolean
  *                 description: 'Só na conclusão: estoque menos reservas de outros orçamentos enviados cobre a quantidade'
@@ -145,6 +147,7 @@ const {
  *       in: path
  *       name: id
  *       required: true
+ *       description: 'Id (uuid) da ordem de serviço, não o número da OS'
  *       schema: { type: string, format: uuid }
  *   responses:
  *     OrdemServicoResposta:
@@ -262,7 +265,10 @@ function createOrdemServicoRouter({ ordemServicoController }) {
    *             type: object
    *             required: [servico_id]
    *             properties:
-   *               servico_id: { type: string, format: uuid }
+   *               servico_id:
+   *                 type: string
+   *                 format: uuid
+   *                 description: 'Id do serviço do catálogo (veja GET /servicos)'
    *     responses:
    *       201:
    *         description: Orçamento da OS com os serviços
@@ -305,7 +311,10 @@ function createOrdemServicoRouter({ ordemServicoController }) {
    *             type: object
    *             required: [peca_id, quantidade]
    *             properties:
-   *               peca_id: { type: string, format: uuid }
+   *               peca_id:
+   *                 type: string
+   *                 format: uuid
+   *                 description: 'Id da peça/insumo do catálogo (veja GET /pecas)'
    *               quantidade: { type: integer, minimum: 1, maximum: 10000, example: 2 }
    *     responses:
    *       201:
