@@ -5,7 +5,12 @@ const LIMITE = new UnprocessableError('O item faria o valor total do orçamento 
 const { buildOrcamento, buildOrcamentoServico, buildOrcamentoPeca } = require('../orcamento.fixtures');
 
 const orcamento = (overrides = {}) => new Orcamento(buildOrcamento(overrides));
-const servico = { id: '5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d', preco: 120 };
+const servico = {
+  id: '5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d',
+  nome: 'Troca de pastilhas de freio',
+  descricao: 'Inclui a limpeza das pinças',
+  preco: 120,
+};
 
 describe('Orcamento', () => {
   it('recusa status desconhecido', () => {
@@ -36,17 +41,27 @@ describe('Orcamento', () => {
     expect(o.valorTotal).toBe(180.1);
   });
 
+  it.each([
+    [STATUS.EM_DIAGNOSTICO, false],
+    [STATUS.ENVIADO, true],
+    [STATUS.APROVADO, true],
+    [STATUS.REPROVADO, true],
+    [STATUS.EXPIRADO, true],
+  ])('enviado com o orçamento %s é %s', (status, esperado) => {
+    expect(orcamento({ status }).enviado).toBe(esperado);
+  });
+
   it('começa sem itens quando as listas não são informadas', () => {
     expect(new Orcamento({ id: 'o1', status: STATUS.EM_DIAGNOSTICO }).valorTotal).toBe(0);
   });
 
   describe('adicionarServico', () => {
-    it('copia o preço do catálogo e atualiza o total', () => {
+    it('copia o nome e o preço do catálogo e atualiza o total', () => {
       const o = orcamento({ servicos: [buildOrcamentoServico({ servico_id: 'outro', valor_unitario: 80.2 })] });
 
       const item = o.adicionarServico({ ...servico, preco: 150.5 });
 
-      expect(item).toEqual({ servico_id: servico.id, valor_unitario: 150.5 });
+      expect(item).toEqual({ servico_id: servico.id, nome: 'Troca de pastilhas de freio', valor_unitario: 150.5 });
       expect(o.valorTotal).toBe(230.7);
     });
 
@@ -119,14 +134,31 @@ describe('Orcamento', () => {
   });
 
   describe('adicionarPeca', () => {
-    const peca = { id: '9f8e7d6c-5b4a-4321-8fed-cba987654321', preco_unitario: 39.9, quantidade_estoque: 0 };
+    const peca = {
+      id: '9f8e7d6c-5b4a-4321-8fed-cba987654321',
+      codigo: 'PF-001',
+      nome: 'Pastilha de freio dianteira',
+      descricao: 'Cerâmica',
+      tipo: 'PECA',
+      unidade_medida: 'UN',
+      preco_unitario: 39.9,
+      quantidade_estoque: 0,
+    };
 
-    it('copia o preço do catálogo com a quantidade, mesmo sem estoque', () => {
+    it('copia a descrição e o preço do catálogo com a quantidade, mesmo sem estoque', () => {
       const o = orcamento();
 
       const item = o.adicionarPeca(peca, 2);
 
-      expect(item).toEqual({ peca_id: peca.id, quantidade: 2, valor_unitario: 39.9 });
+      expect(item).toEqual({
+        peca_id: peca.id,
+        codigo: 'PF-001',
+        nome: 'Pastilha de freio dianteira',
+        tipo: 'PECA',
+        unidade_medida: 'UN',
+        quantidade: 2,
+        valor_unitario: 39.9,
+      });
       expect(o.valorTotal).toBe(79.8);
     });
 

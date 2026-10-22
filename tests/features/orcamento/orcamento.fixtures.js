@@ -18,6 +18,7 @@ function buildOrcamento(overrides = {}) {
 function buildOrcamentoServico(overrides = {}) {
   return {
     servico_id: '5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d',
+    nome: 'Troca de pastilhas de freio',
     valor_unitario: 120,
     ...overrides,
   };
@@ -26,6 +27,10 @@ function buildOrcamentoServico(overrides = {}) {
 function buildOrcamentoPeca(overrides = {}) {
   return {
     peca_id: '9f8e7d6c-5b4a-4321-8fed-cba987654321',
+    codigo: 'PF-001',
+    nome: 'Pastilha de freio dianteira',
+    tipo: 'PECA',
+    unidade_medida: 'UN',
     quantidade: 2,
     valor_unitario: 39.9,
     ...overrides,
