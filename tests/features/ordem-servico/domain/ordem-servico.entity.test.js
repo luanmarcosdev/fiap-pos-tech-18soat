@@ -36,4 +36,22 @@ describe('OrdemServico', () => {
       },
     );
   });
+
+  describe('adicionarServico (Adiciona Serviço)', () => {
+    it('vale durante o diagnóstico, sem mudar o status, e devolve o evento ServicoAdicionado', () => {
+      const os = ordemServico({ status: STATUS.EM_DIAGNOSTICO });
+
+      expect(os.adicionarServico()).toMatchObject({ tipo: 'ServicoAdicionado', numero: 42 });
+      expect(os.status).toBe(STATUS.EM_DIAGNOSTICO);
+    });
+
+    it.each(Object.values(STATUS).filter((status) => status !== STATUS.EM_DIAGNOSTICO))(
+      'gera ConflictError com a OS em %s',
+      (status) => {
+        expect(() => ordemServico({ status }).adicionarServico()).toThrow(
+          new ConflictError('Só é possível adicionar serviços durante o diagnóstico'),
+        );
+      },
+    );
+  });
 });

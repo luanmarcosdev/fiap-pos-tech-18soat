@@ -1,4 +1,4 @@
-const mockTransaction = { LOCK: { UPDATE: 'UPDATE' } };
+const mockTransaction = { LOCK: { UPDATE: 'UPDATE', NO_KEY_UPDATE: 'NO KEY UPDATE' } };
 
 jest.mock('@src/infra/database/sequelize', () => ({
   sequelize: { transaction: jest.fn((callback) => callback(mockTransaction)) },
@@ -32,7 +32,8 @@ describe('ordensServicoRepository.updateWithLock', () => {
 
     const result = await ordensServicoRepository.updateWithLock(os.id, change);
 
-    expect(OrdemServico.findByPk).toHaveBeenCalledWith(os.id, { transaction: mockTransaction, lock: 'UPDATE' });
+    // NO KEY UPDATE para não bloquear quem grava um orçamento com FK para a OS
+    expect(OrdemServico.findByPk).toHaveBeenCalledWith(os.id, { transaction: mockTransaction, lock: 'NO KEY UPDATE' });
     expect(change).toHaveBeenCalledWith(os);
     expect(row.update).toHaveBeenCalledWith({ status: 'EM_DIAGNOSTICO' }, { transaction: mockTransaction });
     expect(result).toEqual(updated);
@@ -56,5 +57,15 @@ describe('ordensServicoRepository.updateWithLock', () => {
       }),
     ).rejects.toThrow('Transição inválida');
     expect(row.update).not.toHaveBeenCalled();
+  });
+});
+
+describe('ordensServicoRepository.findById', () => {
+  it('devolve objeto simples ou null', async () => {
+    OrdemServico.findByPk.mockResolvedValueOnce({ toJSON: () => os }).mockResolvedValueOnce(null);
+
+    await expect(ordensServicoRepository.findById(os.id)).resolves.toEqual(os);
+    await expect(ordensServicoRepository.findById(os.id)).resolves.toBeNull();
+    expect(OrdemServico.findByPk).toHaveBeenCalledWith(os.id);
   });
 });

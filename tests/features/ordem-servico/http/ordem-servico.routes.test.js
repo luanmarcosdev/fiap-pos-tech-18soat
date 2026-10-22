@@ -1,12 +1,16 @@
 jest.mock('@src/features/ordem-servico/infra/ordens-servico.repository');
 jest.mock('@src/features/clientes/infra/clientes.repository');
 jest.mock('@src/features/veiculos/infra/veiculos.repository');
+jest.mock('@src/features/servicos/infra/servicos.repository');
+jest.mock('@src/features/orcamento/infra/orcamentos.repository');
 
 const request = require('supertest');
 const app = require('@src/app');
 const ordensServicoRepository = require('@src/features/ordem-servico/infra/ordens-servico.repository');
 const clientesRepository = require('@src/features/clientes/infra/clientes.repository');
 const veiculosRepository = require('@src/features/veiculos/infra/veiculos.repository');
+const servicosRepository = require('@src/features/servicos/infra/servicos.repository');
+const orcamentosRepository = require('@src/features/orcamento/infra/orcamentos.repository');
 const { signToken } = require('@src/features/auth');
 const { buildOrdemServico } = require('../ordem-servico.fixtures');
 
@@ -66,6 +70,92 @@ describe('/api/ordens-servico', () => {
         erro: 'Só é possível iniciar o diagnóstico de uma ordem de serviço recebida',
       });
       expect(console.info).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('POST /:id/servicos', () => {
+    const url = `/api/ordens-servico/${os.id}/servicos`;
+    const servico = { id: '5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d', nome: 'Troca de óleo', preco: 120 };
+    const rascunho = { id: 'b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e', ordem_servico_id: os.id, status: 'EM_DIAGNOSTICO', servicos: [] };
+
+    const mockOs = (stored) => ordensServicoRepository.findById.mockResolvedValue(stored);
+    // o repository mockado executa a mudança sobre o estado informado, como a transação real
+    const mockOrcamento = (stored) =>
+      orcamentosRepository.addServico.mockImplementation(async (ordemServicoId, change) => {
+        const { servico: item, valor_total } = await change(stored);
+        return { ...stored, valor_total, servicos: [...stored.servicos, item] };
+      });
+
+    it('401 sem token', async () => {
+      expect((await request(app).post(url).send({ servico_id: servico.id })).status).toBe(401);
+    });
+
+    it('201 com o orçamento e o preço copiado do catálogo', async () => {
+      mockOs(buildOrdemServico({ status: 'EM_DIAGNOSTICO' }));
+      mockOrcamento(rascunho);
+      servicosRepository.findById.mockResolvedValue(servico);
+
+      const response = await request(app).post(url).set(auth).send({ servico_id: servico.id });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual({
+        ...rascunho,
+        valor_total: 120,
+        servicos: [{ servico_id: servico.id, valor_unitario: 120 }],
+      });
+    });
+
+    it('400 sem servico_id', async () => {
+      expect((await request(app).post(url).set(auth).send({})).status).toBe(400);
+    });
+
+    it('404 quando a OS não existe', async () => {
+      mockOs(null);
+
+      expect((await request(app).post(url).set(auth).send({ servico_id: servico.id })).status).toBe(404);
+    });
+
+    it('409 quando a OS não está em diagnóstico', async () => {
+      mockOs(buildOrdemServico({ status: 'RECEBIDA' }));
+
+      const response = await request(app).post(url).set(auth).send({ servico_id: servico.id });
+
+      expect(response.status).toBe(409);
+      expect(response.body).toEqual({ erro: 'Só é possível adicionar serviços durante o diagnóstico' });
+      expect(orcamentosRepository.addServico).not.toHaveBeenCalled();
+    });
+
+    it('409 com serviço repetido', async () => {
+      mockOs(buildOrdemServico({ status: 'EM_DIAGNOSTICO' }));
+      mockOrcamento({ ...rascunho, servicos: [{ servico_id: servico.id, valor_unitario: 120 }] });
+      servicosRepository.findById.mockResolvedValue(servico);
+
+      const response = await request(app).post(url).set(auth).send({ servico_id: servico.id });
+
+      expect(response.status).toBe(409);
+      expect(response.body).toEqual({ erro: 'Serviço já adicionado ao orçamento' });
+    });
+
+    it('409 quando o orçamento já foi gerado (conclusão concorrente)', async () => {
+      mockOs(buildOrdemServico({ status: 'EM_DIAGNOSTICO' }));
+      mockOrcamento({ ...rascunho, status: 'ENVIADO' });
+      servicosRepository.findById.mockResolvedValue(servico);
+
+      const response = await request(app).post(url).set(auth).send({ servico_id: servico.id });
+
+      expect(response.status).toBe(409);
+      expect(response.body).toEqual({ erro: 'O orçamento já foi gerado e não aceita novos itens' });
+    });
+
+    it('422 quando o serviço não existe', async () => {
+      mockOs(buildOrdemServico({ status: 'EM_DIAGNOSTICO' }));
+      servicosRepository.findById.mockResolvedValue(null);
+
+      const response = await request(app).post(url).set(auth).send({ servico_id: servico.id });
+
+      expect(response.status).toBe(422);
+      expect(response.body).toEqual({ erro: 'Serviço não encontrado' });
+      expect(orcamentosRepository.addServico).not.toHaveBeenCalled();
     });
   });
 

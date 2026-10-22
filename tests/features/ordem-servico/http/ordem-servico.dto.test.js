@@ -1,4 +1,12 @@
-const { consultaDto } = require('@src/features/ordem-servico/http/ordem-servico.dto');
+const { consultaDto, adicionarServicoDto } = require('@src/features/ordem-servico/http/ordem-servico.dto');
+
+describe('adicionarServicoDto', () => {
+  it('exige servico_id em UUID', () => {
+    expect(adicionarServicoDto.safeParse({ servico_id: '5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d' }).success).toBe(true);
+    expect(adicionarServicoDto.safeParse({ servico_id: 'abc' }).success).toBe(false);
+    expect(adicionarServicoDto.safeParse({}).success).toBe(false);
+  });
+});
 
 describe('consultaDto', () => {
   it('aceita documento com máscara e remove espaços', () => {
