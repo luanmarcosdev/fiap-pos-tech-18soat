@@ -24,6 +24,7 @@ api.use(health.routes);
 
 // rotas públicas
 api.use(auth.routes);
+api.use('/ordens-servico', ordemServico.publicRoutes);
 
 // rotas protegidas
 api.use('/clientes', auth.authenticate, clientes.routes);
