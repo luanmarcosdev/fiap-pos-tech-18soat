@@ -3,6 +3,8 @@ const { listVeiculosByCliente } = require('../veiculos');
 const ordensServicoRepository = require('./infra/ordens-servico.repository');
 const notificador = require('./infra/notificador');
 const { NotificarCliente } = require('./application/policies/notificar-cliente');
+const { ListarOrdensServico } = require('./application/listar-ordens-servico');
+const { DetalharOrdemServico } = require('./application/detalhar-ordem-servico');
 const { IniciarDiagnostico } = require('./application/iniciar-diagnostico');
 const { AdicionarServico } = require('./application/adicionar-servico');
 const { AdicionarPeca } = require('./application/adicionar-peca');
@@ -16,8 +18,16 @@ const { createOrdemServicoRouter, createOrdemServicoPublicRouter } = require('./
 const adicionarServicoOrcamento = (...args) => require('../orcamento').adicionarServicoOrcamento(...args);
 const adicionarPecaOrcamento = (...args) => require('../orcamento').adicionarPecaOrcamento(...args);
 const gerarOrcamento = (...args) => require('../orcamento').gerarOrcamento(...args);
+const getOrcamentoByOrdemServico = (...args) => require('../orcamento').getOrcamentoByOrdemServico(...args);
 
 const notificarCliente = new NotificarCliente({ getClienteById, notificador });
+const listarOrdensServico = new ListarOrdensServico({ ordensServicoRepository });
+const detalharOrdemServico = new DetalharOrdemServico({
+  ordensServicoRepository,
+  getClienteById,
+  listVeiculosByCliente,
+  getOrcamentoByOrdemServico,
+});
 const iniciarDiagnostico = new IniciarDiagnostico({ ordensServicoRepository, notificarCliente });
 const adicionarServico = new AdicionarServico({ ordensServicoRepository, adicionarServicoOrcamento });
 const adicionarPeca = new AdicionarPeca({ ordensServicoRepository, adicionarPecaOrcamento });
@@ -28,6 +38,8 @@ const consultarOrdemServico = new ConsultarOrdemServico({
   listVeiculosByCliente,
 });
 const ordemServicoController = new OrdemServicoController({
+  listarOrdensServico,
+  detalharOrdemServico,
   iniciarDiagnostico,
   adicionarServico,
   adicionarPeca,

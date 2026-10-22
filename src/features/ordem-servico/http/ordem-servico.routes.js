@@ -2,6 +2,7 @@ const { Router } = require('express');
 const { validateRequest } = require('../../../infra/http/validate-request');
 const {
   idParamDto,
+  listQueryDto,
   consultaDto,
   adicionarServicoDto,
   adicionarPecaDto,
@@ -78,6 +79,36 @@ const {
  *                 description: 'Só na conclusão: estoque menos reservas de outros orçamentos enviados cobre a quantidade'
  *         created_at: { type: string, format: date-time }
  *         updated_at: { type: string, format: date-time }
+ *     OrdemServicoDetalhe:
+ *       allOf:
+ *         - $ref: '#/components/schemas/OrdemServico'
+ *         - type: object
+ *           properties:
+ *             cliente:
+ *               type: object
+ *               nullable: true
+ *               description: 'null se o cadastro foi removido depois da abertura da OS'
+ *               properties:
+ *                 id: { type: string, format: uuid }
+ *                 nome: { type: string, example: Maria da Silva }
+ *                 documento: { type: string, example: '52998224725' }
+ *                 telefone: { type: string, example: '11987654321' }
+ *                 email: { type: string, nullable: true, example: maria@email.com }
+ *             veiculo:
+ *               type: object
+ *               nullable: true
+ *               description: 'null se o cadastro foi removido ou o veículo passou para outro cliente depois da OS'
+ *               properties:
+ *                 id: { type: string, format: uuid }
+ *                 placa: { type: string, example: ABC1D23 }
+ *                 marca: { type: string, example: Volkswagen }
+ *                 modelo: { type: string, example: Gol 1.0 }
+ *                 ano: { type: integer, example: 2020 }
+ *             orcamento:
+ *               type: object
+ *               allOf: [{ $ref: '#/components/schemas/OrdemServicoOrcamento' }]
+ *               nullable: true
+ *               description: 'null enquanto nenhum serviço ou peça/insumo foi adicionado'
  *   parameters:
  *     OrdemServicoId:
  *       in: path
@@ -103,6 +134,65 @@ const {
  */
 function createOrdemServicoRouter({ ordemServicoController }) {
   const router = Router();
+
+  /**
+   * @openapi
+   * /ordens-servico:
+   *   get:
+   *     tags: [OrdensServico]
+   *     summary: Lista ordens de serviço com paginação e filtros (mais recentes primeiro)
+   *     security: [{ bearerAuth: [] }]
+   *     parameters:
+   *       - { in: query, name: page, schema: { type: integer, minimum: 1, default: 1 } }
+   *       - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+   *       - in: query
+   *         name: status
+   *         schema:
+   *           type: string
+   *           enum: [RECEBIDA, EM_DIAGNOSTICO, AGUARDANDO_APROVACAO, EM_EXECUCAO, FINALIZADA, ENTREGUE]
+   *       - { in: query, name: cliente_id, schema: { type: string, format: uuid } }
+   *       - { in: query, name: veiculo_id, schema: { type: string, format: uuid } }
+   *     responses:
+   *       200:
+   *         description: Página de ordens de serviço
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 data:
+   *                   type: array
+   *                   items: { $ref: '#/components/schemas/OrdemServico' }
+   *                 meta:
+   *                   type: object
+   *                   properties:
+   *                     page: { type: integer }
+   *                     limit: { type: integer }
+   *                     total: { type: integer }
+   *       400: { $ref: '#/components/responses/DadosInvalidos' }
+   *       401: { $ref: '#/components/responses/NaoAutenticado' }
+   */
+  router.get('/', validateRequest({ query: listQueryDto }), ordemServicoController.list);
+
+  /**
+   * @openapi
+   * /ordens-servico/{id}:
+   *   get:
+   *     tags: [OrdensServico]
+   *     summary: Detalha uma ordem de serviço com cliente, veículo e orçamento
+   *     security: [{ bearerAuth: [] }]
+   *     parameters: [{ $ref: '#/components/parameters/OrdemServicoId' }]
+   *     responses:
+   *       200:
+   *         description: Ordem de serviço detalhada
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/OrdemServicoDetalhe' }
+   *       400: { $ref: '#/components/responses/DadosInvalidos' }
+   *       401: { $ref: '#/components/responses/NaoAutenticado' }
+   *       404: { $ref: '#/components/responses/OrdemServicoNaoEncontrada' }
+   */
+  router.get('/:id', validateRequest({ params: idParamDto }), ordemServicoController.getById);
 
   /**
    * @openapi

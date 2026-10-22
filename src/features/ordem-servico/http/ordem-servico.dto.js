@@ -1,4 +1,6 @@
 const { z } = require('zod');
+const { paginationQueryDto } = require('../../../infra/http/pagination');
+const { STATUS } = require('../domain/ordem-servico.entity');
 
 const idParamDto = z.object({
   id: z.uuid(),
@@ -25,8 +27,15 @@ const concluirDiagnosticoDto = z.object({
   diagnostico: z.string().trim().min(1).max(5000),
 });
 
+const listQueryDto = paginationQueryDto.extend({
+  status: z.enum(Object.values(STATUS)).optional(),
+  cliente_id: z.uuid().optional(),
+  veiculo_id: z.uuid().optional(),
+});
+
 module.exports = {
   idParamDto,
+  listQueryDto,
   consultaDto,
   adicionarServicoDto,
   adicionarPecaDto,
