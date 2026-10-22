@@ -1,0 +1,118 @@
+const { OrdemServico, STATUS } = require('@src/features/ordem-servico/domain/ordem-servico.entity');
+const { ConflictError, ValidationError } = require('@src/shared/errors');
+const { buildOrdemServico } = require('../ordem-servico.fixtures');
+
+const ordemServico = (overrides = {}) => new OrdemServico(buildOrdemServico(overrides));
+
+describe('OrdemServico', () => {
+  it('recusa status desconhecido', () => {
+    expect(() => ordemServico({ status: 'CANCELADA' })).toThrow('Status inválido');
+  });
+
+  it.each([
+    [STATUS.RECEBIDA, false],
+    [STATUS.EM_DIAGNOSTICO, false],
+    [STATUS.AGUARDANDO_APROVACAO, true],
+    [STATUS.EM_EXECUCAO, true],
+    [STATUS.FINALIZADA, true],
+    [STATUS.ENTREGUE, true],
+  ])('diagnosticoConcluido com a OS %s é %s', (status, esperado) => {
+    expect(ordemServico({ status }).diagnosticoConcluido).toBe(esperado);
+  });
+
+  describe('iniciarDiagnostico (Inicia Diagnóstico)', () => {
+    it('passa de RECEBIDA para EM_DIAGNOSTICO e devolve o evento DiagnosticoIniciado', () => {
+      const os = ordemServico();
+
+      const evento = os.iniciarDiagnostico();
+
+      expect(os.status).toBe(STATUS.EM_DIAGNOSTICO);
+      expect(evento).toEqual({
+        tipo: 'DiagnosticoIniciado',
+        ordemServicoId: '3c2b1a09-8f7e-4d6c-9b5a-4f3e2d1c0b9a',
+        numero: 42,
+        clienteId: '1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d',
+      });
+    });
+
+    it.each(Object.values(STATUS).filter((status) => status !== STATUS.RECEBIDA))(
+      'gera ConflictError com a OS em %s',
+      (status) => {
+        const os = ordemServico({ status });
+
+        expect(() => os.iniciarDiagnostico()).toThrow(
+          new ConflictError('Só é possível iniciar o diagnóstico de uma ordem de serviço recebida'),
+        );
+        expect(os.status).toBe(status);
+      },
+    );
+  });
+
+  describe('adicionarServico (Adiciona Serviço)', () => {
+    it('vale durante o diagnóstico, sem mudar o status, e devolve o evento ServicoAdicionado', () => {
+      const os = ordemServico({ status: STATUS.EM_DIAGNOSTICO });
+
+      expect(os.adicionarServico()).toMatchObject({ tipo: 'ServicoAdicionado', numero: 42 });
+      expect(os.status).toBe(STATUS.EM_DIAGNOSTICO);
+    });
+
+    it.each(Object.values(STATUS).filter((status) => status !== STATUS.EM_DIAGNOSTICO))(
+      'gera ConflictError com a OS em %s',
+      (status) => {
+        expect(() => ordemServico({ status }).adicionarServico()).toThrow(
+          new ConflictError('Só é possível adicionar serviços durante o diagnóstico'),
+        );
+      },
+    );
+  });
+
+  describe('concluirDiagnostico (Conclui Diagnóstico)', () => {
+    it('registra o diagnóstico sem espaços nas pontas, passa a AGUARDANDO_APROVACAO e devolve DiagnosticoConcluido', () => {
+      const os = ordemServico({ status: STATUS.EM_DIAGNOSTICO });
+
+      const evento = os.concluirDiagnostico('  Pastilhas gastas  ');
+
+      expect(os.status).toBe(STATUS.AGUARDANDO_APROVACAO);
+      expect(os.diagnostico).toBe('Pastilhas gastas');
+      expect(evento).toMatchObject({ tipo: 'DiagnosticoConcluido', numero: 42 });
+    });
+
+    it.each(['', '   ', null, undefined, 42])('gera ValidationError com diagnóstico %p', (diagnostico) => {
+      const os = ordemServico({ status: STATUS.EM_DIAGNOSTICO });
+
+      expect(() => os.concluirDiagnostico(diagnostico)).toThrow(ValidationError);
+      expect(os.status).toBe(STATUS.EM_DIAGNOSTICO);
+    });
+
+    it.each(Object.values(STATUS).filter((status) => status !== STATUS.EM_DIAGNOSTICO))(
+      'gera ConflictError com a OS em %s',
+      (status) => {
+        expect(() => ordemServico({ status }).concluirDiagnostico('ok')).toThrow(
+          new ConflictError('Só é possível concluir o diagnóstico de uma ordem de serviço em diagnóstico'),
+        );
+      },
+    );
+
+    it('começa sem diagnóstico quando ele não é informado', () => {
+      expect(new OrdemServico({ id: 'os', status: STATUS.RECEBIDA }).diagnostico).toBeNull();
+    });
+  });
+
+  describe('adicionarPeca (Adiciona Peças/Insumos)', () => {
+    it('vale durante o diagnóstico, sem mudar o status, e devolve o evento PecasInsumosAdicionados', () => {
+      const os = ordemServico({ status: STATUS.EM_DIAGNOSTICO });
+
+      expect(os.adicionarPeca()).toMatchObject({ tipo: 'PecasInsumosAdicionados', numero: 42 });
+      expect(os.status).toBe(STATUS.EM_DIAGNOSTICO);
+    });
+
+    it.each(Object.values(STATUS).filter((status) => status !== STATUS.EM_DIAGNOSTICO))(
+      'gera ConflictError com a OS em %s',
+      (status) => {
+        expect(() => ordemServico({ status }).adicionarPeca()).toThrow(
+          new ConflictError('Só é possível adicionar peças e insumos durante o diagnóstico'),
+        );
+      },
+    );
+  });
+});
