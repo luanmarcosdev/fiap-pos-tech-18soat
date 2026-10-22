@@ -25,16 +25,22 @@ async function findOrCreateLocked(ordemServicoId, transaction) {
   return withItens(await findLocked({ ordem_servico_id: ordemServicoId }, transaction), transaction);
 }
 
+const comItens = {
+  include: [{ association: 'servicos' }, { association: 'pecas' }],
+  order: [
+    [{ model: OrcamentoServico, as: 'servicos' }, 'created_at', 'ASC'],
+    [{ model: OrcamentoPeca, as: 'pecas' }, 'created_at', 'ASC'],
+  ],
+};
+
 async function findWithItens(id, transaction) {
-  const row = await Orcamento.findByPk(id, {
-    include: [{ association: 'servicos' }, { association: 'pecas' }],
-    order: [
-      [{ model: OrcamentoServico, as: 'servicos' }, 'created_at', 'ASC'],
-      [{ model: OrcamentoPeca, as: 'pecas' }, 'created_at', 'ASC'],
-    ],
-    transaction,
-  });
+  const row = await Orcamento.findByPk(id, { ...comItens, transaction });
   return row.toJSON();
+}
+
+async function findByOrdemServico(ordemServicoId) {
+  const row = await Orcamento.findOne({ where: { ordem_servico_id: ordemServicoId }, ...comItens });
+  return row ? row.toJSON() : null;
 }
 
 /**
@@ -89,6 +95,7 @@ async function sumReservasByPeca(pecaIds, excetoOrcamentoId) {
 module.exports = {
   addServico: (ordemServicoId, change) => addItem(OrcamentoServico, ordemServicoId, change),
   addPeca: (ordemServicoId, change) => addItem(OrcamentoPeca, ordemServicoId, change),
+  findByOrdemServico,
   updateWithLock,
   sumReservasByPeca,
 };

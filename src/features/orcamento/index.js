@@ -21,4 +21,7 @@ module.exports = {
   // API pública para o "Conclui Diagnóstico": gera e envia o orçamento (idempotente) e devolve os itens com
   // `em_estoque` em cada peça. Lança UnprocessableError (sem itens) e ConflictError (orçamento aprovado/reprovado/expirado)
   gerarOrcamento: (ordemServicoId) => gerarOrcamento.execute(ordemServicoId),
+
+  // detalhamento da OS: orçamento com os itens ou null se nenhum item foi adicionado
+  getOrcamentoByOrdemServico: (ordemServicoId) => orcamentosRepository.findByOrdemServico(ordemServicoId),
 };
