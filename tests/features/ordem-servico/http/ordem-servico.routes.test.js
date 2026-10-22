@@ -440,7 +440,7 @@ describe('/api/ordens-servico', () => {
       const response = await request(app).post(url).set(auth).send({ diagnostico: 'ok' });
 
       expect(response.status).toBe(409);
-      expect(response.body).toEqual({ erro: 'O orçamento já foi gerado e não aceita novos itens' });
+      expect(response.body).toEqual({ erro: 'O orçamento já foi aprovado, reprovado ou expirado' });
       expect(ordensServicoRepository.updateWithLock).not.toHaveBeenCalled();
     });
 
