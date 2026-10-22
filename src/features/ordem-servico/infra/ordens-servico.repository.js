@@ -1,6 +1,12 @@
 const { sequelize } = require('../../../infra/database/sequelize');
 const { OrdemServico } = require('./ordens-servico.model');
 
+const toPlain = (model) => (model ? model.toJSON() : null);
+
+async function findByNumero(numero) {
+  return toPlain(await OrdemServico.findOne({ where: { numero } }));
+}
+
 /**
  * Altera a OS de forma segura sob concorrência: trava a linha (SELECT ... FOR UPDATE),
  * entrega os dados atuais para `change` (que aplica a regra de domínio e devolve os novos valores)
@@ -18,5 +24,6 @@ async function updateWithLock(id, change) {
 }
 
 module.exports = {
+  findByNumero,
   updateWithLock,
 };
