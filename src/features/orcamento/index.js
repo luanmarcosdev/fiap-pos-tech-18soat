@@ -5,11 +5,13 @@ const { AdicionarServicoOrcamento } = require('./application/adicionar-servico-o
 const { AdicionarPecaOrcamento } = require('./application/adicionar-peca-orcamento');
 const { VerificarEstoque } = require('./application/policies/verificar-estoque');
 const { GerarOrcamento } = require('./application/policies/gerar-orcamento');
+const { ConsultarOrcamentoEnviado } = require('./application/consultar-orcamento-enviado');
 
 const adicionarServicoOrcamento = new AdicionarServicoOrcamento({ orcamentosRepository, getServicoById });
 const adicionarPecaOrcamento = new AdicionarPecaOrcamento({ orcamentosRepository, getPecaById });
 const verificarEstoque = new VerificarEstoque({ orcamentosRepository, getPecaById });
 const gerarOrcamento = new GerarOrcamento({ orcamentosRepository, verificarEstoque });
+const consultarOrcamentoEnviado = new ConsultarOrcamentoEnviado({ orcamentosRepository });
 
 module.exports = {
   // API pública para a ordem de serviço ("Adiciona Serviço" e "Adiciona Peças/Insumos"). Lançam UnprocessableError
@@ -22,6 +24,10 @@ module.exports = {
   // `em_estoque` em cada peça. Lança UnprocessableError (sem itens) e ConflictError (orçamento aprovado/reprovado/expirado)
   gerarOrcamento: (ordemServicoId) => gerarOrcamento.execute(ordemServicoId),
 
-  // detalhamento da OS: orçamento com os itens ou null se nenhum item foi adicionado
+  // detalhamento da OS (atendente/mecânico): orçamento com os itens, inclusive o rascunho, ou null se nenhum item
+  // foi adicionado
   getOrcamentoByOrdemServico: (ordemServicoId) => orcamentosRepository.findByOrdemServico(ordemServicoId),
+
+  // consulta aberta da OS (cliente): só o orçamento já enviado; null enquanto for rascunho ou se não existir
+  getOrcamentoEnviadoByOrdemServico: (ordemServicoId) => consultarOrcamentoEnviado.execute(ordemServicoId),
 };

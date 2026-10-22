@@ -29,7 +29,8 @@ function validarQuantidade(quantidade) {
 /**
  * Orçamento da OS. Durante o diagnóstico é um rascunho (EM_DIAGNOSTICO) que recebe os serviços e peças/insumos
  * escolhidos pelo mecânico; ao concluir o diagnóstico é gerado e enviado ao cliente.
- * Os itens guardam uma cópia do preço do catálogo: mudar o catálogo depois não altera o orçamento.
+ * Os itens guardam uma cópia do preço e da descrição do catálogo: mudar ou remover o item do catálogo depois não
+ * altera o orçamento.
  */
 class Orcamento {
   #status;
@@ -53,6 +54,11 @@ class Orcamento {
     return this.#expiraEm;
   }
 
+  /** Saiu do rascunho: foi enviado ao cliente (e depois aprovado, reprovado ou expirado). */
+  get enviado() {
+    return this.#status !== STATUS.EM_DIAGNOSTICO;
+  }
+
   get valorTotal() {
     const servicos = this.#servicos.reduce((total, { valor_unitario }) => total + toCentavos(valor_unitario), 0);
     const pecas = this.#pecas.reduce(
@@ -62,24 +68,24 @@ class Orcamento {
     return (servicos + pecas) / 100;
   }
 
-  adicionarServico({ id, preco }) {
+  adicionarServico({ id, nome, preco }) {
     this.#ensureEmDiagnostico();
     if (this.#servicos.some(({ servico_id }) => servico_id === id)) {
       throw new ConflictError('Serviço já adicionado ao orçamento');
     }
-    const item = { servico_id: id, valor_unitario: preco };
+    const item = { servico_id: id, nome, valor_unitario: preco };
     this.#incluir(this.#servicos, item);
     return item;
   }
 
   /** O estoque não é conferido aqui: "Verificar Estoque" acontece ao gerar o orçamento e não bloqueia. */
-  adicionarPeca({ id, preco_unitario }, quantidade) {
+  adicionarPeca({ id, codigo, nome, tipo, unidade_medida, preco_unitario }, quantidade) {
     this.#ensureEmDiagnostico();
     validarQuantidade(quantidade);
     if (this.#pecas.some(({ peca_id }) => peca_id === id)) {
       throw new ConflictError('Peça/insumo já adicionado ao orçamento');
     }
-    const item = { peca_id: id, quantidade, valor_unitario: preco_unitario };
+    const item = { peca_id: id, codigo, nome, tipo, unidade_medida, quantidade, valor_unitario: preco_unitario };
     this.#incluir(this.#pecas, item);
     return item;
   }

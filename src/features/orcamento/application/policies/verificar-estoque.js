@@ -24,7 +24,7 @@ class VerificarEstoque {
     for (const item of orcamento.pecas) {
       const peca = await this.#findPeca(item.peca_id);
       const disponivel = peca ? peca.quantidade_estoque - (reservas[item.peca_id] ?? 0) : 0;
-      pecas.push({ ...item, nome: peca?.nome ?? null, em_estoque: disponivel >= item.quantidade });
+      pecas.push({ ...item, em_estoque: disponivel >= item.quantidade });
     }
     return { ...orcamento, pecas };
   }
