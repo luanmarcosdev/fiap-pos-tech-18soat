@@ -140,7 +140,9 @@ describe('Orcamento', () => {
     });
 
     it.each([STATUS.APROVADO, STATUS.REPROVADO, STATUS.EXPIRADO])('gera ConflictError com o orçamento %s', (status) => {
-      expect(() => orcamento({ status, servicos: [buildOrcamentoServico()] }).gerar(agora)).toThrow(ConflictError);
+      expect(() => orcamento({ status, servicos: [buildOrcamentoServico()] }).gerar(agora)).toThrow(
+        new ConflictError('O orçamento já foi aprovado, reprovado ou expirado'),
+      );
     });
   });
 
