@@ -47,17 +47,18 @@ describe('NotificarCliente', () => {
       });
     });
 
-    it('usa a data de Brasília (02:00 UTC ainda é o dia anterior) e nomeia peça removida do catálogo', async () => {
+    it('usa a data de Brasília (02:00 UTC ainda é o dia anterior)', async () => {
       const { policy, notificador } = setup();
+      const pecas = [{ nome: 'Pastilha de freio', em_estoque: false }];
 
       await policy.execute({
-        ...concluido([{ nome: null, em_estoque: false }]),
-        orcamento: { ...orcamento([{ nome: null, em_estoque: false }]), expira_em: '2026-11-05T02:00:00.000Z' },
+        ...concluido(pecas),
+        orcamento: { ...orcamento(pecas), expira_em: '2026-11-05T02:00:00.000Z' },
       });
 
       expect(notificador.enviar.mock.calls[0][0].mensagem).toBe(
         'Sua ordem de serviço nº 42 aguarda sua aprovação. Orçamento: R$ 471,70, válido até 04/11/2026. ' +
-          'Peças/insumos a encomendar: item removido do catálogo.',
+          'Peças/insumos a encomendar: Pastilha de freio.',
       );
     });
 

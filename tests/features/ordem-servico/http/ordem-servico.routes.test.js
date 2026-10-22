@@ -163,7 +163,7 @@ describe('/api/ordens-servico', () => {
       expect((await request(app).post(url).send({ servico_id: servico.id })).status).toBe(401);
     });
 
-    it('201 com o orçamento e o preço copiado do catálogo', async () => {
+    it('201 com o orçamento e o nome e o preço copiados do catálogo', async () => {
       mockOs(buildOrdemServico({ status: 'EM_DIAGNOSTICO' }));
       mockOrcamento(rascunho);
       servicosRepository.findById.mockResolvedValue(servico);
@@ -174,7 +174,7 @@ describe('/api/ordens-servico', () => {
       expect(response.body).toEqual({
         ...rascunho,
         valor_total: 120,
-        servicos: [{ servico_id: servico.id, valor_unitario: 120 }],
+        servicos: [{ servico_id: servico.id, nome: 'Troca de óleo', valor_unitario: 120 }],
       });
     });
 
@@ -237,7 +237,10 @@ describe('/api/ordens-servico', () => {
     // registro do slice pecas, sem estoque: adicionar não exige estoque
     const peca = {
       id: '9f8e7d6c-5b4a-4321-8fed-cba987654321',
+      codigo: 'FO-010',
       nome: 'Filtro de óleo',
+      tipo: 'PECA',
+      unidade_medida: 'UN',
       preco_unitario: 39.9,
       quantidade_estoque: 0,
       estoque_minimo: 2,
@@ -263,7 +266,7 @@ describe('/api/ordens-servico', () => {
       expect((await request(app).post(url).send(body)).status).toBe(401);
     });
 
-    it('201 com a quantidade e o preço copiado do catálogo, mesmo sem estoque', async () => {
+    it('201 com a quantidade e a descrição e o preço copiados do catálogo, mesmo sem estoque', async () => {
       mockOs(buildOrdemServico({ status: 'EM_DIAGNOSTICO' }));
       mockOrcamento(rascunho);
       pecasRepository.findById.mockResolvedValue(peca);
@@ -274,7 +277,17 @@ describe('/api/ordens-servico', () => {
       expect(response.body).toEqual({
         ...rascunho,
         valor_total: 79.8,
-        pecas: [{ peca_id: peca.id, quantidade: 2, valor_unitario: 39.9 }],
+        pecas: [
+          {
+            peca_id: peca.id,
+            codigo: 'FO-010',
+            nome: 'Filtro de óleo',
+            tipo: 'PECA',
+            unidade_medida: 'UN',
+            quantidade: 2,
+            valor_unitario: 39.9,
+          },
+        ],
       });
     });
 
@@ -345,7 +358,17 @@ describe('/api/ordens-servico', () => {
       valor_total: 79.8,
       expira_em: null,
       servicos: [],
-      pecas: [{ peca_id: 'pastilha', quantidade: 2, valor_unitario: 39.9 }],
+      pecas: [
+        {
+          peca_id: 'pastilha',
+          codigo: 'PF-001',
+          nome: 'Pastilha de freio',
+          tipo: 'PECA',
+          unidade_medida: 'UN',
+          quantidade: 2,
+          valor_unitario: 39.9,
+        },
+      ],
     };
 
     // os repositories mockados executam a mudança sobre o estado informado, como as transações reais
@@ -369,7 +392,8 @@ describe('/api/ordens-servico', () => {
     it('200 com a OS aguardando aprovação, o orçamento enviado com em_estoque e o cliente notificado', async () => {
       mockOs(emDiagnostico);
       mockOrcamento(rascunho);
-      pecasRepository.findById.mockResolvedValue({ id: 'pastilha', nome: 'Pastilha de freio', quantidade_estoque: 0 });
+      // renomeada no catálogo depois da inclusão: o orçamento mantém o nome copiado
+      pecasRepository.findById.mockResolvedValue({ id: 'pastilha', nome: 'Pastilha cerâmica', quantidade_estoque: 0 });
       clientesRepository.findById.mockResolvedValue({ id: os.cliente_id });
 
       const response = await request(app).post(url).set(auth).send({ diagnostico: ' Pastilhas gastas ' });
@@ -452,11 +476,51 @@ describe('/api/ordens-servico', () => {
         queixa: 'Barulho ao frear',
         diagnostico: null,
         veiculo: { placa: 'ABC1D23', marca: 'Volkswagen', modelo: 'Gol 1.0', ano: 2020 },
+        orcamento: null,
         created_at: os.created_at,
         updated_at: os.updated_at,
       });
       // a normalização do documento é do slice de clientes
       expect(clientesRepository.findByDocumento).toHaveBeenCalledWith('52998224725');
+      expect(orcamentosRepository.findByOrdemServico).not.toHaveBeenCalled();
+    });
+
+    it('200 com o orçamento enviado para aprovação, descrito e sem ids internos', async () => {
+      ordensServicoRepository.findByNumero.mockResolvedValue({ ...os, status: 'AGUARDANDO_APROVACAO' });
+      clientesRepository.findByDocumento.mockResolvedValue({ id: os.cliente_id });
+      veiculosRepository.findAllByCliente.mockResolvedValue([veiculo]);
+      orcamentosRepository.findByOrdemServico.mockResolvedValue({
+        id: 'b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e',
+        ordem_servico_id: os.id,
+        status: 'ENVIADO',
+        valor_total: 199.8,
+        expira_em: '2026-11-05T13:00:00.000Z',
+        servicos: [{ id: 'i1', servico_id: 's1', nome: 'Troca de pastilhas', valor_unitario: 120 }],
+        pecas: [
+          {
+            id: 'i2',
+            peca_id: 'p1',
+            codigo: 'PF-001',
+            nome: 'Pastilha de freio',
+            tipo: 'PECA',
+            unidade_medida: 'UN',
+            quantidade: 2,
+            valor_unitario: 39.9,
+          },
+        ],
+      });
+
+      const response = await request(app).post('/api/ordens-servico/consulta').send(consulta);
+
+      expect(response.status).toBe(200);
+      expect(orcamentosRepository.findByOrdemServico).toHaveBeenCalledWith(os.id);
+      expect(response.body.orcamento).toEqual({
+        status: 'ENVIADO',
+        valor_total: 199.8,
+        expira_em: '2026-11-05T13:00:00.000Z',
+        servicos: [{ nome: 'Troca de pastilhas', valor_unitario: 120 }],
+        pecas: [{ nome: 'Pastilha de freio', tipo: 'PECA', unidade_medida: 'UN', quantidade: 2, valor_unitario: 39.9 }],
+      });
     });
 
     it.each([

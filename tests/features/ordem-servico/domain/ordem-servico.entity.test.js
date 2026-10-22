@@ -9,6 +9,17 @@ describe('OrdemServico', () => {
     expect(() => ordemServico({ status: 'CANCELADA' })).toThrow('Status inválido');
   });
 
+  it.each([
+    [STATUS.RECEBIDA, false],
+    [STATUS.EM_DIAGNOSTICO, false],
+    [STATUS.AGUARDANDO_APROVACAO, true],
+    [STATUS.EM_EXECUCAO, true],
+    [STATUS.FINALIZADA, true],
+    [STATUS.ENTREGUE, true],
+  ])('diagnosticoConcluido com a OS %s é %s', (status, esperado) => {
+    expect(ordemServico({ status }).diagnosticoConcluido).toBe(esperado);
+  });
+
   describe('iniciarDiagnostico (Inicia Diagnóstico)', () => {
     it('passa de RECEBIDA para EM_DIAGNOSTICO e devolve o evento DiagnosticoIniciado', () => {
       const os = ordemServico();
