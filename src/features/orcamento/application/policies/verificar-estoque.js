@@ -20,12 +20,12 @@ class VerificarEstoque {
       orcamento.pecas.map(({ peca_id }) => peca_id),
       orcamento.id,
     );
-    const pecas = [];
-    for (const item of orcamento.pecas) {
-      const peca = await this.#findPeca(item.peca_id);
+    const catalogo = await Promise.all(orcamento.pecas.map(({ peca_id }) => this.#findPeca(peca_id)));
+    const pecas = orcamento.pecas.map((item, i) => {
+      const peca = catalogo[i];
       const disponivel = peca ? peca.quantidade_estoque - (reservas[item.peca_id] ?? 0) : 0;
-      pecas.push({ ...item, em_estoque: disponivel >= item.quantidade });
-    }
+      return { ...item, em_estoque: disponivel >= item.quantidade };
+    });
     return { ...orcamento, pecas };
   }
 

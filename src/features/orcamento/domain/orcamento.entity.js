@@ -98,7 +98,9 @@ class Orcamento {
    */
   gerar(agora) {
     if (this.#status === STATUS.ENVIADO) return;
-    this.#ensureEmDiagnostico();
+    if (this.#status !== STATUS.EM_DIAGNOSTICO) {
+      throw new ConflictError('O orçamento já foi aprovado, reprovado ou expirado');
+    }
     if (this.#servicos.length === 0 && this.#pecas.length === 0) throw new UnprocessableError(SEM_ITENS);
     this.#status = STATUS.ENVIADO;
     this.#expiraEm = new Date(agora.getTime() + VALIDADE_EM_DIAS * UM_DIA_EM_MS);
