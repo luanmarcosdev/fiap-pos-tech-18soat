@@ -15,8 +15,15 @@ const adicionarServicoDto = z.object({
   servico_id: z.uuid(),
 });
 
+// limite realista para uma OS; o teto do valor total é garantido pelo orçamento
+const adicionarPecaDto = z.object({
+  peca_id: z.uuid(),
+  quantidade: z.number().int().positive().max(10_000),
+});
+
 module.exports = {
   idParamDto,
   consultaDto,
   adicionarServicoDto,
+  adicionarPecaDto,
 };

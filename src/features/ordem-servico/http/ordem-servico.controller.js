@@ -1,11 +1,13 @@
 class OrdemServicoController {
   #iniciarDiagnostico;
   #adicionarServico;
+  #adicionarPeca;
   #consultarOrdemServico;
 
-  constructor({ iniciarDiagnostico, adicionarServico, consultarOrdemServico }) {
+  constructor({ iniciarDiagnostico, adicionarServico, adicionarPeca, consultarOrdemServico }) {
     this.#iniciarDiagnostico = iniciarDiagnostico;
     this.#adicionarServico = adicionarServico;
+    this.#adicionarPeca = adicionarPeca;
     this.#consultarOrdemServico = consultarOrdemServico;
   }
 
@@ -16,6 +18,11 @@ class OrdemServicoController {
 
   adicionarServico = async (req, res) => {
     const orcamento = await this.#adicionarServico.execute(req.params.id, req.body.servico_id);
+    res.status(201).json(orcamento);
+  };
+
+  adicionarPeca = async (req, res) => {
+    const orcamento = await this.#adicionarPeca.execute(req.params.id, req.body);
     res.status(201).json(orcamento);
   };
 

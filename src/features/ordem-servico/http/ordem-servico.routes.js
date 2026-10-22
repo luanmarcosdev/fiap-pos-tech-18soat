@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const { validateRequest } = require('../../../infra/http/validate-request');
-const { idParamDto, consultaDto, adicionarServicoDto } = require('./ordem-servico.dto');
+const { idParamDto, consultaDto, adicionarServicoDto, adicionarPecaDto } = require('./ordem-servico.dto');
 
 /**
  * @openapi
@@ -57,6 +57,15 @@ const { idParamDto, consultaDto, adicionarServicoDto } = require('./ordem-servic
  *               id: { type: string, format: uuid }
  *               servico_id: { type: string, format: uuid }
  *               valor_unitario: { type: number, description: 'Preço do catálogo no momento da inclusão', example: 120 }
+ *         pecas:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id: { type: string, format: uuid }
+ *               peca_id: { type: string, format: uuid }
+ *               quantidade: { type: integer, example: 2 }
+ *               valor_unitario: { type: number, description: 'Preço do catálogo no momento da inclusão', example: 39.9 }
  *         created_at: { type: string, format: date-time }
  *         updated_at: { type: string, format: date-time }
  *   parameters:
@@ -138,7 +147,7 @@ function createOrdemServicoRouter({ ordemServicoController }) {
    *           application/json:
    *             schema: { $ref: '#/components/schemas/Erro' }
    *       422:
-   *         description: Serviço não encontrado
+   *         description: 'Serviço não encontrado, ou o item faria o valor total passar do limite'
    *         content:
    *           application/json:
    *             schema: { $ref: '#/components/schemas/Erro' }
@@ -147,6 +156,50 @@ function createOrdemServicoRouter({ ordemServicoController }) {
     '/:id/servicos',
     validateRequest({ params: idParamDto, body: adicionarServicoDto }),
     ordemServicoController.adicionarServico,
+  );
+
+  /**
+   * @openapi
+   * /ordens-servico/{id}/pecas:
+   *   post:
+   *     tags: [OrdensServico]
+   *     summary: Adiciona uma peça/insumo ao orçamento da OS em diagnóstico (o estoque é verificado só ao gerar o orçamento)
+   *     security: [{ bearerAuth: [] }]
+   *     parameters: [{ $ref: '#/components/parameters/OrdemServicoId' }]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [peca_id, quantidade]
+   *             properties:
+   *               peca_id: { type: string, format: uuid }
+   *               quantidade: { type: integer, minimum: 1, maximum: 10000, example: 2 }
+   *     responses:
+   *       201:
+   *         description: Orçamento da OS com os itens
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/OrdemServicoOrcamento' }
+   *       400: { $ref: '#/components/responses/DadosInvalidos' }
+   *       401: { $ref: '#/components/responses/NaoAutenticado' }
+   *       404: { $ref: '#/components/responses/OrdemServicoNaoEncontrada' }
+   *       409:
+   *         description: 'OS fora do diagnóstico, peça/insumo já adicionado ou orçamento já gerado'
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Erro' }
+   *       422:
+   *         description: 'Peça/insumo não encontrado, ou o item faria o valor total passar do limite'
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Erro' }
+   */
+  router.post(
+    '/:id/pecas',
+    validateRequest({ params: idParamDto, body: adicionarPecaDto }),
+    ordemServicoController.adicionarPeca,
   );
 
   return router;
