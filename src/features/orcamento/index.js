@@ -15,7 +15,8 @@ const consultarOrcamentoEnviado = new ConsultarOrcamentoEnviado({ orcamentosRepo
 
 module.exports = {
   // API pública para a ordem de serviço ("Adiciona Serviço" e "Adiciona Peças/Insumos"). Lançam UnprocessableError
-  // (item inexistente) e ConflictError (item repetido ou orçamento já gerado); devolvem o orçamento com os itens
+  // (item inexistente) e ConflictError (item repetido ou orçamento já gerado); devolvem o orçamento com os itens.
+  // Em todas as funções abaixo, cada peça/insumo vem com `subtotal` (quantidade × valor unitário)
   adicionarServicoOrcamento: (ordemServicoId, servicoId) => adicionarServicoOrcamento.execute(ordemServicoId, servicoId),
   adicionarPecaOrcamento: (ordemServicoId, pecaId, quantidade) =>
     adicionarPecaOrcamento.execute(ordemServicoId, pecaId, quantidade),

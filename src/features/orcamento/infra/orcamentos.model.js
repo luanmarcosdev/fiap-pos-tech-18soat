@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../../../infra/database/sequelize');
-const { STATUS } = require('../domain/orcamento.entity');
+const { STATUS, subtotal } = require('../domain/orcamento.entity');
 
 // underscored só renomeia as colunas; aqui os atributos (e o JSON da API) também ficam em snake_case
 const timestamps = { underscored: true, createdAt: 'created_at', updatedAt: 'updated_at' };
@@ -72,7 +72,13 @@ function itemToJSON() {
 }
 
 OrcamentoServico.prototype.toJSON = itemToJSON;
-OrcamentoPeca.prototype.toJSON = itemToJSON;
+
+// calculado, não gravado: todo orçamento que sai do slice passa por aqui e usa a mesma conta do valor total
+OrcamentoPeca.prototype.toJSON = function toJSON() {
+  const values = itemToJSON.call(this);
+  if (values.quantidade != null && values.valor_unitario != null) values.subtotal = subtotal(values);
+  return values;
+};
 
 Orcamento.prototype.toJSON = function toJSON() {
   const values = { ...this.get() };

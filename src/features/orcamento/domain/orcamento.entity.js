@@ -11,6 +11,12 @@ const STATUS = Object.freeze({
 // soma em centavos para não sofrer com ponto flutuante (ex.: 0.1 + 0.2)
 const toCentavos = (valor) => Math.round(valor * 100);
 
+// serviço não tem quantidade: vale uma vez o valor unitário
+const subtotalEmCentavos = ({ quantidade = 1, valor_unitario }) => quantidade * toCentavos(valor_unitario);
+
+/** Valor da linha do orçamento (quantidade × valor unitário), com a mesma conta do valor total. */
+const subtotal = (item) => subtotalEmCentavos(item) / 100;
+
 const VALOR_TOTAL_MAXIMO = 99999999.99; // DECIMAL(10,2) de orcamentos.valor_total
 
 const SEM_ITENS = 'Adicione ao menos um serviço ou peça/insumo antes de concluir o diagnóstico';
@@ -60,12 +66,8 @@ class Orcamento {
   }
 
   get valorTotal() {
-    const servicos = this.#servicos.reduce((total, { valor_unitario }) => total + toCentavos(valor_unitario), 0);
-    const pecas = this.#pecas.reduce(
-      (total, { quantidade, valor_unitario }) => total + quantidade * toCentavos(valor_unitario),
-      0,
-    );
-    return (servicos + pecas) / 100;
+    const itens = [...this.#servicos, ...this.#pecas];
+    return itens.reduce((total, item) => total + subtotalEmCentavos(item), 0) / 100;
   }
 
   adicionarServico({ id, nome, preco }) {
@@ -118,4 +120,4 @@ class Orcamento {
   }
 }
 
-module.exports = { Orcamento, STATUS, SEM_ITENS };
+module.exports = { Orcamento, STATUS, SEM_ITENS, subtotal };
