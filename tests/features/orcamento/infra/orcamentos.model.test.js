@@ -21,11 +21,21 @@ describe('Orcamento model', () => {
 
     expect(json.valor_total).toBe(310.3);
     expect(json.servicos[0].valor_unitario).toBe(150.5);
-    expect(json.pecas[0]).toMatchObject({ quantidade: 2, valor_unitario: 79.9 });
+    expect(json.pecas[0]).toMatchObject({ quantidade: 2, valor_unitario: 79.9, subtotal: 159.8 });
+  });
+
+  it('calcula o subtotal das peças/insumos, sem gravar', () => {
+    const json = OrcamentoPeca.build({ quantidade: 10, valor_unitario: '13.45' }).toJSON();
+
+    expect(json.subtotal).toBe(134.5);
+    expect(OrcamentoPeca.getAttributes().subtotal).toBeUndefined();
   });
 
   it('mantém valores ausentes', () => {
     expect(OrcamentoServico.build({}).toJSON().valor_unitario).toBeUndefined();
+    expect(OrcamentoPeca.build({}).toJSON()).not.toHaveProperty('subtotal');
+    // linha lida sem a quantidade (attributes parcial) não ganha um subtotal errado
+    expect(OrcamentoPeca.build({ valor_unitario: '10' }).toJSON()).not.toHaveProperty('subtotal');
     expect(OrcamentoPeca.build({}).toJSON().valor_unitario).toBeUndefined();
   });
 

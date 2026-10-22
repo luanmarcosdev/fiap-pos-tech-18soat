@@ -1,4 +1,4 @@
-const { Orcamento, STATUS } = require('@src/features/orcamento/domain/orcamento.entity');
+const { Orcamento, STATUS, subtotal } = require('@src/features/orcamento/domain/orcamento.entity');
 const { ConflictError, UnprocessableError, ValidationError } = require('@src/shared/errors');
 
 const LIMITE = new UnprocessableError('O item faria o valor total do orçamento passar do limite permitido');
@@ -49,6 +49,17 @@ describe('Orcamento', () => {
     [STATUS.EXPIRADO, true],
   ])('enviado com o orçamento %s é %s', (status, esperado) => {
     expect(orcamento({ status }).enviado).toBe(esperado);
+  });
+
+  describe('subtotal', () => {
+    it('multiplica a quantidade pelo valor unitário em centavos', () => {
+      expect(subtotal({ quantidade: 10, valor_unitario: 13.45 })).toBe(134.5);
+      expect(subtotal({ quantidade: 3, valor_unitario: 0.1 })).toBe(0.3); // 3 * 0.1 em ponto flutuante daria 0.30000000000000004
+    });
+
+    it('serviço, sem quantidade, vale o valor unitário', () => {
+      expect(subtotal({ valor_unitario: 120 })).toBe(120);
+    });
   });
 
   it('começa sem itens quando as listas não são informadas', () => {
