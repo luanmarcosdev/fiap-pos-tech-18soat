@@ -39,19 +39,40 @@ const OrcamentoServico = sequelize.define(
   { tableName: 'orcamento_servicos', ...timestamps },
 );
 
-Orcamento.hasMany(OrcamentoServico, { as: 'servicos', foreignKey: 'orcamento_id' });
+const OrcamentoPeca = sequelize.define(
+  'OrcamentoPeca',
+  {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    orcamento_id: { type: DataTypes.UUID, allowNull: false },
+    peca_id: { type: DataTypes.UUID, allowNull: false },
+    quantidade: { type: DataTypes.INTEGER, allowNull: false },
+    valor_unitario: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
+  },
+  { tableName: 'orcamento_pecas', ...timestamps },
+);
 
-OrcamentoServico.prototype.toJSON = function toJSON() {
+Orcamento.hasMany(OrcamentoServico, { as: 'servicos', foreignKey: 'orcamento_id' });
+Orcamento.hasMany(OrcamentoPeca, { as: 'pecas', foreignKey: 'orcamento_id' });
+
+function itemToJSON() {
   const values = { ...this.get() };
   values.valor_unitario = toNumber(values.valor_unitario);
   return values;
-};
+}
+
+OrcamentoServico.prototype.toJSON = itemToJSON;
+OrcamentoPeca.prototype.toJSON = itemToJSON;
 
 Orcamento.prototype.toJSON = function toJSON() {
   const values = { ...this.get() };
   values.valor_total = toNumber(values.valor_total);
   if (values.servicos) values.servicos = values.servicos.map((servico) => servico.toJSON());
+  if (values.pecas) values.pecas = values.pecas.map((peca) => peca.toJSON());
   return values;
 };
 
-module.exports = { Orcamento, OrcamentoServico };
+module.exports = { Orcamento, OrcamentoServico, OrcamentoPeca };
