@@ -41,6 +41,16 @@ class OrdemServico {
     return this.#evento('DiagnosticoIniciado');
   }
 
+  /** Comando "Adiciona Serviço": o status não muda, mas só vale durante o diagnóstico. */
+  adicionarServico() {
+    this.#ensureEmDiagnostico('Só é possível adicionar serviços durante o diagnóstico');
+    return this.#evento('ServicoAdicionado');
+  }
+
+  #ensureEmDiagnostico(mensagem) {
+    if (this.#status !== STATUS.EM_DIAGNOSTICO) throw new ConflictError(mensagem);
+  }
+
   #evento(tipo) {
     return { tipo, ordemServicoId: this.#id, numero: this.#numero, clienteId: this.#clienteId };
   }
