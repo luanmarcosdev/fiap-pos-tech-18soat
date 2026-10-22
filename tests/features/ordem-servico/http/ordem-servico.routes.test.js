@@ -269,6 +269,105 @@ describe('/api/ordens-servico', () => {
     });
   });
 
+  describe('POST /:id/concluir-diagnostico', () => {
+    const url = `/api/ordens-servico/${os.id}/concluir-diagnostico`;
+    const emDiagnostico = buildOrdemServico({ status: 'EM_DIAGNOSTICO' });
+    const rascunho = {
+      id: 'b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e',
+      ordem_servico_id: os.id,
+      status: 'EM_DIAGNOSTICO',
+      valor_total: 79.8,
+      expira_em: null,
+      servicos: [],
+      pecas: [{ peca_id: 'pastilha', quantidade: 2, valor_unitario: 39.9 }],
+    };
+
+    // os repositories mockados executam a mudança sobre o estado informado, como as transações reais
+    const mockOs = (stored) => {
+      ordensServicoRepository.findById.mockResolvedValue(stored);
+      ordensServicoRepository.updateWithLock.mockImplementation(async (id, change) =>
+        stored ? { ...stored, ...(await change(stored)) } : null,
+      );
+    };
+    const mockOrcamento = (stored) => {
+      orcamentosRepository.updateWithLock.mockImplementation(async (ordemServicoId, change) =>
+        stored ? { ...stored, ...(await change(stored)) } : null,
+      );
+      orcamentosRepository.sumReservasByPeca.mockResolvedValue({});
+    };
+
+    it('401 sem token', async () => {
+      expect((await request(app).post(url).send({ diagnostico: 'ok' })).status).toBe(401);
+    });
+
+    it('200 com a OS aguardando aprovação, o orçamento enviado com em_estoque e o cliente notificado', async () => {
+      mockOs(emDiagnostico);
+      mockOrcamento(rascunho);
+      pecasRepository.findById.mockResolvedValue({ id: 'pastilha', nome: 'Pastilha de freio', quantidade_estoque: 0 });
+      clientesRepository.findById.mockResolvedValue({ id: os.cliente_id });
+
+      const response = await request(app).post(url).set(auth).send({ diagnostico: ' Pastilhas gastas ' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.ordem_servico).toMatchObject({
+        status: 'AGUARDANDO_APROVACAO',
+        diagnostico: 'Pastilhas gastas',
+      });
+      expect(response.body.orcamento).toMatchObject({
+        status: 'ENVIADO',
+        expira_em: expect.any(String),
+        pecas: [{ peca_id: 'pastilha', nome: 'Pastilha de freio', em_estoque: false }],
+      });
+      expect(console.info).toHaveBeenCalledWith(expect.stringContaining('aguarda sua aprovação'));
+    });
+
+    it('400 sem diagnóstico', async () => {
+      expect((await request(app).post(url).set(auth).send({})).status).toBe(400);
+    });
+
+    it('404 quando a OS não existe', async () => {
+      mockOs(null);
+
+      expect((await request(app).post(url).set(auth).send({ diagnostico: 'ok' })).status).toBe(404);
+    });
+
+    it('409, sem gerar orçamento, quando a OS não está em diagnóstico', async () => {
+      mockOs(buildOrdemServico({ status: 'RECEBIDA' }));
+
+      const response = await request(app).post(url).set(auth).send({ diagnostico: 'ok' });
+
+      expect(response.status).toBe(409);
+      expect(response.body).toEqual({
+        erro: 'Só é possível concluir o diagnóstico de uma ordem de serviço em diagnóstico',
+      });
+      expect(orcamentosRepository.updateWithLock).not.toHaveBeenCalled();
+    });
+
+    it('409, sem mudar a OS, quando o orçamento já foi aprovado/reprovado/expirado', async () => {
+      mockOs(emDiagnostico);
+      mockOrcamento({ ...rascunho, status: 'APROVADO' });
+
+      const response = await request(app).post(url).set(auth).send({ diagnostico: 'ok' });
+
+      expect(response.status).toBe(409);
+      expect(response.body).toEqual({ erro: 'O orçamento já foi gerado e não aceita novos itens' });
+      expect(ordensServicoRepository.updateWithLock).not.toHaveBeenCalled();
+    });
+
+    it('422, sem mudar a OS, quando nenhum item foi adicionado', async () => {
+      mockOs(emDiagnostico);
+      mockOrcamento(null);
+
+      const response = await request(app).post(url).set(auth).send({ diagnostico: 'ok' });
+
+      expect(response.status).toBe(422);
+      expect(response.body).toEqual({
+        erro: 'Adicione ao menos um serviço ou peça/insumo antes de concluir o diagnóstico',
+      });
+      expect(ordensServicoRepository.updateWithLock).not.toHaveBeenCalled();
+    });
+  });
+
   describe('POST /consulta (aberta)', () => {
     const veiculo = { id: os.veiculo_id, placa: 'ABC1D23', marca: 'Volkswagen', modelo: 'Gol 1.0', ano: 2020 };
     const consulta = { numero: 42, documento: '529.982.247-25' };

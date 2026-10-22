@@ -2,7 +2,25 @@ const {
   consultaDto,
   adicionarServicoDto,
   adicionarPecaDto,
+  concluirDiagnosticoDto,
 } = require('@src/features/ordem-servico/http/ordem-servico.dto');
+
+describe('concluirDiagnosticoDto', () => {
+  it('remove espaços do diagnóstico', () => {
+    expect(concluirDiagnosticoDto.parse({ diagnostico: '  Pastilhas gastas ' })).toEqual({
+      diagnostico: 'Pastilhas gastas',
+    });
+  });
+
+  it.each([
+    ['ausente', {}],
+    ['vazio', { diagnostico: '   ' }],
+    ['longo', { diagnostico: 'x'.repeat(5001) }],
+    ['não texto', { diagnostico: 42 }],
+  ])('rejeita diagnóstico %s', (_, body) => {
+    expect(concluirDiagnosticoDto.safeParse(body).success).toBe(false);
+  });
+});
 
 describe('adicionarPecaDto', () => {
   const PECA_ID = '9f8e7d6c-5b4a-4321-8fed-cba987654321';

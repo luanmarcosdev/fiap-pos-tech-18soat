@@ -24,6 +24,54 @@ describe('NotificarCliente', () => {
     });
   });
 
+  describe('DiagnosticoConcluido (aguardando aprovação + orçamento enviado)', () => {
+    const orcamento = (pecas) => ({ valor_total: 471.7, expira_em: '2026-11-05T13:00:00.000Z', pecas });
+    const concluido = (pecas) => ({ ...diagnosticoIniciado, tipo: 'DiagnosticoConcluido', orcamento: orcamento(pecas) });
+
+    it('envia valor, validade e as peças/insumos a encomendar', async () => {
+      const { policy, notificador } = setup();
+
+      await policy.execute(
+        concluido([
+          { nome: 'Pastilha de freio', em_estoque: false },
+          { nome: 'Fluido de freio', em_estoque: true },
+          { nome: 'Disco de freio', em_estoque: false },
+        ]),
+      );
+
+      expect(notificador.enviar).toHaveBeenCalledWith({
+        cliente,
+        mensagem:
+          'Sua ordem de serviço nº 42 aguarda sua aprovação. Orçamento: R$ 471,70, válido até 05/11/2026. ' +
+          'Peças/insumos a encomendar: Pastilha de freio, Disco de freio.',
+      });
+    });
+
+    it('usa a data de Brasília (02:00 UTC ainda é o dia anterior) e nomeia peça removida do catálogo', async () => {
+      const { policy, notificador } = setup();
+
+      await policy.execute({
+        ...concluido([{ nome: null, em_estoque: false }]),
+        orcamento: { ...orcamento([{ nome: null, em_estoque: false }]), expira_em: '2026-11-05T02:00:00.000Z' },
+      });
+
+      expect(notificador.enviar.mock.calls[0][0].mensagem).toBe(
+        'Sua ordem de serviço nº 42 aguarda sua aprovação. Orçamento: R$ 471,70, válido até 04/11/2026. ' +
+          'Peças/insumos a encomendar: item removido do catálogo.',
+      );
+    });
+
+    it('não fala de encomenda quando tudo está em estoque', async () => {
+      const { policy, notificador } = setup();
+
+      await policy.execute(concluido([{ nome: 'Fluido de freio', em_estoque: true }]));
+
+      expect(notificador.enviar.mock.calls[0][0].mensagem).toBe(
+        'Sua ordem de serviço nº 42 aguarda sua aprovação. Orçamento: R$ 471,70, válido até 05/11/2026.',
+      );
+    });
+  });
+
   it('não notifica quando o cliente não existe mais', async () => {
     const { policy, notificador } = setup({ getClienteById: jest.fn().mockResolvedValue(null) });
 

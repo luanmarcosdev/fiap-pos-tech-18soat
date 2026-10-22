@@ -1,5 +1,5 @@
 const { OrdemServico, STATUS } = require('@src/features/ordem-servico/domain/ordem-servico.entity');
-const { ConflictError } = require('@src/shared/errors');
+const { ConflictError, ValidationError } = require('@src/shared/errors');
 const { buildOrdemServico } = require('../ordem-servico.fixtures');
 
 const ordemServico = (overrides = {}) => new OrdemServico(buildOrdemServico(overrides));
@@ -53,6 +53,38 @@ describe('OrdemServico', () => {
         );
       },
     );
+  });
+
+  describe('concluirDiagnostico (Conclui Diagnóstico)', () => {
+    it('registra o diagnóstico sem espaços nas pontas, passa a AGUARDANDO_APROVACAO e devolve DiagnosticoConcluido', () => {
+      const os = ordemServico({ status: STATUS.EM_DIAGNOSTICO });
+
+      const evento = os.concluirDiagnostico('  Pastilhas gastas  ');
+
+      expect(os.status).toBe(STATUS.AGUARDANDO_APROVACAO);
+      expect(os.diagnostico).toBe('Pastilhas gastas');
+      expect(evento).toMatchObject({ tipo: 'DiagnosticoConcluido', numero: 42 });
+    });
+
+    it.each(['', '   ', null, undefined, 42])('gera ValidationError com diagnóstico %p', (diagnostico) => {
+      const os = ordemServico({ status: STATUS.EM_DIAGNOSTICO });
+
+      expect(() => os.concluirDiagnostico(diagnostico)).toThrow(ValidationError);
+      expect(os.status).toBe(STATUS.EM_DIAGNOSTICO);
+    });
+
+    it.each(Object.values(STATUS).filter((status) => status !== STATUS.EM_DIAGNOSTICO))(
+      'gera ConflictError com a OS em %s',
+      (status) => {
+        expect(() => ordemServico({ status }).concluirDiagnostico('ok')).toThrow(
+          new ConflictError('Só é possível concluir o diagnóstico de uma ordem de serviço em diagnóstico'),
+        );
+      },
+    );
+
+    it('começa sem diagnóstico quando ele não é informado', () => {
+      expect(new OrdemServico({ id: 'os', status: STATUS.RECEBIDA }).diagnostico).toBeNull();
+    });
   });
 
   describe('adicionarPeca (Adiciona Peças/Insumos)', () => {
