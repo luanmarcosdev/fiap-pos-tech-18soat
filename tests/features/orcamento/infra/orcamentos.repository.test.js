@@ -123,6 +123,21 @@ describe('orcamentosRepository.updateWithLock', () => {
   });
 });
 
+describe('orcamentosRepository.findByOrdemServico', () => {
+  it('devolve o orçamento da OS com os itens, ou null', async () => {
+    Orcamento.findOne.mockResolvedValueOnce(asModel(comItens)).mockResolvedValueOnce(null);
+
+    await expect(orcamentosRepository.findByOrdemServico(ORDEM_SERVICO_ID)).resolves.toEqual(comItens);
+    await expect(orcamentosRepository.findByOrdemServico(ORDEM_SERVICO_ID)).resolves.toBeNull();
+    expect(Orcamento.findOne).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { ordem_servico_id: ORDEM_SERVICO_ID },
+        include: [{ association: 'servicos' }, { association: 'pecas' }],
+      }),
+    );
+  });
+});
+
 describe('orcamentosRepository.sumReservasByPeca', () => {
   it('soma as quantidades das peças em orçamentos enviados, exceto o informado', async () => {
     OrcamentoPeca.findAll.mockResolvedValue([

@@ -30,6 +30,72 @@ describe('/api/ordens-servico', () => {
   beforeEach(() => jest.spyOn(console, 'info').mockImplementation(() => {}));
   afterEach(() => jest.restoreAllMocks());
 
+  describe('GET / (listagem)', () => {
+    it('401 sem token', async () => {
+      expect((await request(app).get('/api/ordens-servico')).status).toBe(401);
+    });
+
+    it('200 com data e meta, repassando os filtros', async () => {
+      ordensServicoRepository.findAll.mockResolvedValue({ rows: [os], count: 1 });
+
+      const response = await request(app).get('/api/ordens-servico?status=RECEBIDA&limit=10').set(auth);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ data: [os], meta: { page: 1, limit: 10, total: 1 } });
+      expect(ordensServicoRepository.findAll).toHaveBeenCalledWith({
+        page: 1,
+        limit: 10,
+        filtros: { status: 'RECEBIDA' },
+      });
+    });
+
+    it('400 com status desconhecido', async () => {
+      expect((await request(app).get('/api/ordens-servico?status=CANCELADA').set(auth)).status).toBe(400);
+    });
+  });
+
+  describe('GET /:id (detalhamento)', () => {
+    const url = `/api/ordens-servico/${os.id}`;
+
+    it('401 sem token', async () => {
+      expect((await request(app).get(url)).status).toBe(401);
+    });
+
+    it('200 com cliente, veículo e orçamento', async () => {
+      const orcamento = { id: 'orcamento', status: 'EM_DIAGNOSTICO', valor_total: 120, servicos: [], pecas: [] };
+      ordensServicoRepository.findById.mockResolvedValue(os);
+      clientesRepository.findById.mockResolvedValue({
+        id: os.cliente_id,
+        nome: 'Maria',
+        documento: '52998224725',
+        cep: '01310100',
+        rua: 'Avenida Paulista',
+      });
+      veiculosRepository.findAllByCliente.mockResolvedValue([{ id: os.veiculo_id, placa: 'ABC1D23' }]);
+      orcamentosRepository.findByOrdemServico.mockResolvedValue(orcamento);
+
+      const response = await request(app).get(url).set(auth);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toMatchObject({
+        id: os.id,
+        cliente: { nome: 'Maria' },
+        veiculo: { placa: 'ABC1D23' },
+        orcamento,
+      });
+      // só o resumo do cliente: endereço não sai no detalhe da OS
+      expect(response.body.cliente).not.toHaveProperty('cep');
+      expect(response.body.cliente).not.toHaveProperty('rua');
+    });
+
+    it('400 com id inválido e 404 quando não existe', async () => {
+      ordensServicoRepository.findById.mockResolvedValue(null);
+
+      expect((await request(app).get('/api/ordens-servico/abc').set(auth)).status).toBe(400);
+      expect((await request(app).get(url).set(auth)).status).toBe(404);
+    });
+  });
+
   describe('POST /:id/iniciar-diagnostico', () => {
     const url = `/api/ordens-servico/${os.id}/iniciar-diagnostico`;
 

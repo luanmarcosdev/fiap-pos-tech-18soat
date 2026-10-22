@@ -1,9 +1,25 @@
 const {
+  listQueryDto,
   consultaDto,
   adicionarServicoDto,
   adicionarPecaDto,
   concluirDiagnosticoDto,
 } = require('@src/features/ordem-servico/http/ordem-servico.dto');
+
+describe('listQueryDto', () => {
+  it('aplica a paginação padrão e aceita os filtros', () => {
+    expect(listQueryDto.parse({ status: 'EM_DIAGNOSTICO' })).toEqual({ page: 1, limit: 20, status: 'EM_DIAGNOSTICO' });
+  });
+
+  it.each([
+    ['status desconhecido', { status: 'CANCELADA' }],
+    ['cliente_id inválido', { cliente_id: 'abc' }],
+    ['veiculo_id inválido', { veiculo_id: 'abc' }],
+    ['limit acima de 100', { limit: '101' }],
+  ])('rejeita %s', (_, query) => {
+    expect(listQueryDto.safeParse(query).success).toBe(false);
+  });
+});
 
 describe('concluirDiagnosticoDto', () => {
   it('remove espaços do diagnóstico', () => {

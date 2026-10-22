@@ -4,7 +4,7 @@ jest.mock('@src/infra/database/sequelize', () => ({
   sequelize: { transaction: jest.fn((callback) => callback(mockTransaction)) },
 }));
 jest.mock('@src/features/ordem-servico/infra/ordens-servico.model', () => ({
-  OrdemServico: { findByPk: jest.fn(), findOne: jest.fn() },
+  OrdemServico: { findByPk: jest.fn(), findOne: jest.fn(), findAndCountAll: jest.fn() },
 }));
 
 const { OrdemServico } = require('@src/features/ordem-servico/infra/ordens-servico.model');
@@ -20,6 +20,37 @@ describe('ordensServicoRepository.findByNumero', () => {
     await expect(ordensServicoRepository.findByNumero(42)).resolves.toEqual(os);
     await expect(ordensServicoRepository.findByNumero(43)).resolves.toBeNull();
     expect(OrdemServico.findOne).toHaveBeenCalledWith({ where: { numero: 42 } });
+  });
+});
+
+describe('ordensServicoRepository.findAll', () => {
+  it('aplica todos os filtros, pagina e ordena das mais recentes', async () => {
+    OrdemServico.findAndCountAll.mockResolvedValue({ rows: [{ toJSON: () => os }], count: 1 });
+
+    const result = await ordensServicoRepository.findAll({
+      page: 2,
+      limit: 10,
+      filtros: { status: 'RECEBIDA', cliente_id: os.cliente_id, veiculo_id: os.veiculo_id },
+    });
+
+    expect(OrdemServico.findAndCountAll).toHaveBeenCalledWith({
+      where: { status: 'RECEBIDA', cliente_id: os.cliente_id, veiculo_id: os.veiculo_id },
+      offset: 10,
+      limit: 10,
+      order: [
+        ['created_at', 'DESC'],
+        ['numero', 'DESC'],
+      ],
+    });
+    expect(result).toEqual({ rows: [os], count: 1 });
+  });
+
+  it('sem filtros', async () => {
+    OrdemServico.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
+
+    await ordensServicoRepository.findAll({ page: 1, limit: 20 });
+
+    expect(OrdemServico.findAndCountAll).toHaveBeenCalledWith(expect.objectContaining({ where: {}, offset: 0 }));
   });
 });
 
