@@ -1,4 +1,4 @@
-const { ConflictError } = require('../../../shared/errors');
+const { ConflictError, ValidationError } = require('../../../shared/errors');
 
 /** "Status da OS Alterado para ..." do event storming. */
 const STATUS = Object.freeze({
@@ -19,17 +19,23 @@ class OrdemServico {
   #numero;
   #clienteId;
   #status;
+  #diagnostico;
 
-  constructor({ id, numero, cliente_id, status }) {
+  constructor({ id, numero, cliente_id, status, diagnostico = null }) {
     if (!Object.values(STATUS).includes(status)) throw new Error(`Status inválido para a ordem de serviço ${id}`);
     this.#id = id;
     this.#numero = numero;
     this.#clienteId = cliente_id;
     this.#status = status;
+    this.#diagnostico = diagnostico;
   }
 
   get status() {
     return this.#status;
+  }
+
+  get diagnostico() {
+    return this.#diagnostico;
   }
 
   /** Comando "Inicia Diagnóstico". */
@@ -51,6 +57,20 @@ class OrdemServico {
   adicionarPeca() {
     this.#ensureEmDiagnostico('Só é possível adicionar peças e insumos durante o diagnóstico');
     return this.#evento('PecasInsumosAdicionados');
+  }
+
+  /**
+   * Comando "Conclui Diagnóstico": registra o diagnóstico do mecânico e a OS passa a aguardar a aprovação do
+   * cliente, que recebe o orçamento gerado na mesma operação.
+   */
+  concluirDiagnostico(diagnostico) {
+    this.#ensureEmDiagnostico('Só é possível concluir o diagnóstico de uma ordem de serviço em diagnóstico');
+    if (typeof diagnostico !== 'string' || diagnostico.trim() === '') {
+      throw new ValidationError('Diagnóstico inválido', [{ campo: 'diagnostico', mensagem: 'Informe o diagnóstico' }]);
+    }
+    this.#diagnostico = diagnostico.trim();
+    this.#status = STATUS.AGUARDANDO_APROVACAO;
+    return this.#evento('DiagnosticoConcluido');
   }
 
   #ensureEmDiagnostico(mensagem) {
