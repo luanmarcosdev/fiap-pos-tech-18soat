@@ -506,6 +506,7 @@ describe('/api/ordens-servico', () => {
             unidade_medida: 'UN',
             quantidade: 2,
             valor_unitario: 39.9,
+            subtotal: 79.8,
           },
         ],
       });
@@ -519,7 +520,16 @@ describe('/api/ordens-servico', () => {
         valor_total: 199.8,
         expira_em: '2026-11-05T13:00:00.000Z',
         servicos: [{ nome: 'Troca de pastilhas', valor_unitario: 120 }],
-        pecas: [{ nome: 'Pastilha de freio', tipo: 'PECA', unidade_medida: 'UN', quantidade: 2, valor_unitario: 39.9 }],
+        pecas: [
+          {
+            nome: 'Pastilha de freio',
+            tipo: 'PECA',
+            unidade_medida: 'UN',
+            quantidade: 2,
+            valor_unitario: 39.9,
+            subtotal: 79.8,
+          },
+        ],
       });
     });
 
