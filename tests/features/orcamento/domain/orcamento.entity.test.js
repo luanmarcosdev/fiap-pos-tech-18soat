@@ -73,6 +73,51 @@ describe('Orcamento', () => {
     );
   });
 
+  describe('gerar (Gerar Orçamento / Enviar Orçamento)', () => {
+    const agora = new Date('2026-10-22T13:00:00.000Z');
+
+    it('envia o rascunho com validade de 14 dias', () => {
+      const o = orcamento({ servicos: [buildOrcamentoServico()] });
+
+      o.gerar(agora);
+
+      expect(o.status).toBe(STATUS.ENVIADO);
+      expect(o.expiraEm).toEqual(new Date('2026-11-05T13:00:00.000Z'));
+    });
+
+    it('aceita orçamento só com peças', () => {
+      const o = orcamento({ pecas: [buildOrcamentoPeca()] });
+
+      o.gerar(agora);
+
+      expect(o.status).toBe(STATUS.ENVIADO);
+    });
+
+    it('já enviado, não muda nada (repetir a conclusão depois de uma falha)', () => {
+      const expiraEm = new Date('2026-11-01T00:00:00.000Z');
+      const o = orcamento({ status: STATUS.ENVIADO, expira_em: expiraEm, servicos: [buildOrcamentoServico()] });
+
+      o.gerar(agora);
+
+      expect(o.status).toBe(STATUS.ENVIADO);
+      expect(o.expiraEm).toBe(expiraEm);
+    });
+
+    it('gera UnprocessableError sem itens', () => {
+      const o = orcamento();
+
+      expect(() => o.gerar(agora)).toThrow(
+        new UnprocessableError('Adicione ao menos um serviço ou peça/insumo antes de concluir o diagnóstico'),
+      );
+      expect(o.status).toBe(STATUS.EM_DIAGNOSTICO);
+      expect(o.expiraEm).toBeNull();
+    });
+
+    it.each([STATUS.APROVADO, STATUS.REPROVADO, STATUS.EXPIRADO])('gera ConflictError com o orçamento %s', (status) => {
+      expect(() => orcamento({ status, servicos: [buildOrcamentoServico()] }).gerar(agora)).toThrow(ConflictError);
+    });
+  });
+
   describe('adicionarPeca', () => {
     const peca = { id: '9f8e7d6c-5b4a-4321-8fed-cba987654321', preco_unitario: 39.9, quantidade_estoque: 0 };
 
