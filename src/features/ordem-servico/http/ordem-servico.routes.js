@@ -45,11 +45,38 @@ const {
  *             marca: { type: string, example: Volkswagen }
  *             modelo: { type: string, example: Gol 1.0 }
  *             ano: { type: integer, example: 2020 }
+ *         orcamento:
+ *           type: object
+ *           nullable: true
+ *           description: 'Orçamento enviado para aprovação; null até o diagnóstico ser concluído'
+ *           properties:
+ *             status: { type: string, enum: [ENVIADO, APROVADO, REPROVADO, EXPIRADO] }
+ *             valor_total: { type: number, example: 199.8 }
+ *             expira_em: { type: string, format: date-time }
+ *             servicos:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   nome: { type: string, example: Troca de pastilhas de freio }
+ *                   valor_unitario: { type: number, example: 120 }
+ *             pecas:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   nome: { type: string, example: Pastilha de freio dianteira }
+ *                   tipo: { type: string, enum: [PECA, INSUMO] }
+ *                   unidade_medida: { type: string, example: UN }
+ *                   quantidade: { type: integer, example: 2 }
+ *                   valor_unitario: { type: number, example: 39.9 }
  *         created_at: { type: string, format: date-time }
  *         updated_at: { type: string, format: date-time }
  *     OrdemServicoOrcamento:
  *       type: object
- *       description: 'Orçamento da OS; EM_DIAGNOSTICO enquanto o mecânico adiciona os itens'
+ *       description: >-
+ *         Orçamento da OS; EM_DIAGNOSTICO enquanto o mecânico adiciona os itens. Preço e descrição de cada item são
+ *         copiados do catálogo na inclusão, então mudar ou remover o item do catálogo não altera o orçamento.
  *       properties:
  *         id: { type: string, format: uuid }
  *         ordem_servico_id: { type: string, format: uuid }
@@ -63,6 +90,7 @@ const {
  *             properties:
  *               id: { type: string, format: uuid }
  *               servico_id: { type: string, format: uuid }
+ *               nome: { type: string, example: Troca de pastilhas de freio }
  *               valor_unitario: { type: number, description: 'Preço do catálogo no momento da inclusão', example: 120 }
  *         pecas:
  *           type: array
@@ -71,9 +99,12 @@ const {
  *             properties:
  *               id: { type: string, format: uuid }
  *               peca_id: { type: string, format: uuid }
+ *               codigo: { type: string, example: PF-001 }
+ *               nome: { type: string, example: Pastilha de freio dianteira }
+ *               tipo: { type: string, enum: [PECA, INSUMO] }
+ *               unidade_medida: { type: string, example: UN }
  *               quantidade: { type: integer, example: 2 }
  *               valor_unitario: { type: number, description: 'Preço do catálogo no momento da inclusão', example: 39.9 }
- *               nome: { type: string, description: 'Só na conclusão do diagnóstico', example: Filtro de óleo }
  *               em_estoque:
  *                 type: boolean
  *                 description: 'Só na conclusão: estoque menos reservas de outros orçamentos enviados cobre a quantidade'

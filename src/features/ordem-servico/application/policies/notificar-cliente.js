@@ -3,9 +3,7 @@ const formatarData = (data) => new Date(data).toLocaleDateString('pt-BR', { time
 
 /** Orçamento enviado ao cliente: valor, validade e o que precisará ser encomendado (sem estoque). */
 function mensagemOrcamento({ numero, orcamento }) {
-  const aEncomendar = orcamento.pecas
-    .filter(({ em_estoque }) => !em_estoque)
-    .map(({ nome }) => nome ?? 'item removido do catálogo');
+  const aEncomendar = orcamento.pecas.filter(({ em_estoque }) => !em_estoque).map(({ nome }) => nome);
   const encomenda = aEncomendar.length > 0 ? ` Peças/insumos a encomendar: ${aEncomendar.join(', ')}.` : '';
   return (
     `Sua ordem de serviço nº ${numero} aguarda sua aprovação. Orçamento: ${formatarValor(orcamento.valor_total)}, ` +

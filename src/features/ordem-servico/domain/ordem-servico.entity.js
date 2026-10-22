@@ -38,6 +38,11 @@ class OrdemServico {
     return this.#diagnostico;
   }
 
+  /** Diagnóstico concluído = o orçamento já foi enviado ao cliente (lista fechada: status novo não entra sem querer). */
+  get diagnosticoConcluido() {
+    return [STATUS.AGUARDANDO_APROVACAO, STATUS.EM_EXECUCAO, STATUS.FINALIZADA, STATUS.ENTREGUE].includes(this.#status);
+  }
+
   /** Comando "Inicia Diagnóstico". */
   iniciarDiagnostico() {
     if (this.#status !== STATUS.RECEBIDA) {

@@ -19,6 +19,8 @@ const adicionarServicoOrcamento = (...args) => require('../orcamento').adicionar
 const adicionarPecaOrcamento = (...args) => require('../orcamento').adicionarPecaOrcamento(...args);
 const gerarOrcamento = (...args) => require('../orcamento').gerarOrcamento(...args);
 const getOrcamentoByOrdemServico = (...args) => require('../orcamento').getOrcamentoByOrdemServico(...args);
+const getOrcamentoEnviadoByOrdemServico = (...args) =>
+  require('../orcamento').getOrcamentoEnviadoByOrdemServico(...args);
 
 const notificarCliente = new NotificarCliente({ getClienteById, notificador });
 const listarOrdensServico = new ListarOrdensServico({ ordensServicoRepository });
@@ -36,6 +38,7 @@ const consultarOrdemServico = new ConsultarOrdemServico({
   ordensServicoRepository,
   getClienteByDocumento,
   listVeiculosByCliente,
+  getOrcamentoEnviadoByOrdemServico,
 });
 const ordemServicoController = new OrdemServicoController({
   listarOrdensServico,
