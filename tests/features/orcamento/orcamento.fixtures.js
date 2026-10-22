@@ -8,6 +8,7 @@ function buildOrcamento(overrides = {}) {
     valor_total: 0,
     expira_em: null,
     servicos: [],
+    pecas: [],
     created_at: '2026-10-22T00:00:00.000Z',
     updated_at: '2026-10-22T00:00:00.000Z',
     ...overrides,
@@ -22,4 +23,13 @@ function buildOrcamentoServico(overrides = {}) {
   };
 }
 
-module.exports = { ORDEM_SERVICO_ID, buildOrcamento, buildOrcamentoServico };
+function buildOrcamentoPeca(overrides = {}) {
+  return {
+    peca_id: '9f8e7d6c-5b4a-4321-8fed-cba987654321',
+    quantidade: 2,
+    valor_unitario: 39.9,
+    ...overrides,
+  };
+}
+
+module.exports = { ORDEM_SERVICO_ID, buildOrcamento, buildOrcamentoServico, buildOrcamentoPeca };

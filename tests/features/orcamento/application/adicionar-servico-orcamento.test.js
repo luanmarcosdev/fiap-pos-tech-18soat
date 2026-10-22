@@ -8,7 +8,7 @@ const setup = ({ stored = buildOrcamento(), servicoEncontrado = servico } = {}) 
   const orcamentosRepository = {
     // simula a transação: entrega o orçamento atual para o callback e devolve o que seria gravado
     addServico: jest.fn(async (ordemServicoId, change) => {
-      const { servico: item, valor_total } = await change(stored);
+      const { item, valor_total } = await change(stored);
       return { ...stored, valor_total, servicos: [...stored.servicos, item] };
     }),
   };
