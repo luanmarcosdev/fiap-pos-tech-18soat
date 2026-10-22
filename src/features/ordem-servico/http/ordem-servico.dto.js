@@ -21,9 +21,14 @@ const adicionarPecaDto = z.object({
   quantidade: z.number().int().positive().max(10_000),
 });
 
+const concluirDiagnosticoDto = z.object({
+  diagnostico: z.string().trim().min(1).max(5000),
+});
+
 module.exports = {
   idParamDto,
   consultaDto,
   adicionarServicoDto,
   adicionarPecaDto,
+  concluirDiagnosticoDto,
 };

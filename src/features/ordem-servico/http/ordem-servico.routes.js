@@ -1,6 +1,12 @@
 const { Router } = require('express');
 const { validateRequest } = require('../../../infra/http/validate-request');
-const { idParamDto, consultaDto, adicionarServicoDto, adicionarPecaDto } = require('./ordem-servico.dto');
+const {
+  idParamDto,
+  consultaDto,
+  adicionarServicoDto,
+  adicionarPecaDto,
+  concluirDiagnosticoDto,
+} = require('./ordem-servico.dto');
 
 /**
  * @openapi
@@ -66,6 +72,10 @@ const { idParamDto, consultaDto, adicionarServicoDto, adicionarPecaDto } = requi
  *               peca_id: { type: string, format: uuid }
  *               quantidade: { type: integer, example: 2 }
  *               valor_unitario: { type: number, description: 'Preço do catálogo no momento da inclusão', example: 39.9 }
+ *               nome: { type: string, description: 'Só na conclusão do diagnóstico', example: Filtro de óleo }
+ *               em_estoque:
+ *                 type: boolean
+ *                 description: 'Só na conclusão: estoque menos reservas de outros orçamentos enviados cobre a quantidade'
  *         created_at: { type: string, format: date-time }
  *         updated_at: { type: string, format: date-time }
  *   parameters:
@@ -200,6 +210,52 @@ function createOrdemServicoRouter({ ordemServicoController }) {
     '/:id/pecas',
     validateRequest({ params: idParamDto, body: adicionarPecaDto }),
     ordemServicoController.adicionarPeca,
+  );
+
+  /**
+   * @openapi
+   * /ordens-servico/{id}/concluir-diagnostico:
+   *   post:
+   *     tags: [OrdensServico]
+   *     summary: Conclui o diagnóstico, gera e envia o orçamento (válido por 14 dias) e notifica o cliente
+   *     description: >-
+   *       A OS vai de EM_DIAGNOSTICO para AGUARDANDO_APROVACAO e o orçamento para ENVIADO. A verificação de estoque
+   *       só informa (em_estoque em cada peça): o que faltar é comprado depois da aprovação.
+   *     security: [{ bearerAuth: [] }]
+   *     parameters: [{ $ref: '#/components/parameters/OrdemServicoId' }]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [diagnostico]
+   *             properties:
+   *               diagnostico: { type: string, maxLength: 5000, example: Pastilhas de freio gastas e fluido contaminado }
+   *     responses:
+   *       200:
+   *         description: OS aguardando aprovação e o orçamento enviado
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 ordem_servico: { $ref: '#/components/schemas/OrdemServico' }
+   *                 orcamento: { $ref: '#/components/schemas/OrdemServicoOrcamento' }
+   *       400: { $ref: '#/components/responses/DadosInvalidos' }
+   *       401: { $ref: '#/components/responses/NaoAutenticado' }
+   *       404: { $ref: '#/components/responses/OrdemServicoNaoEncontrada' }
+   *       409: { $ref: '#/components/responses/StatusNaoPermiteComando' }
+   *       422:
+   *         description: Nenhum serviço ou peça/insumo foi adicionado
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Erro' }
+   */
+  router.post(
+    '/:id/concluir-diagnostico',
+    validateRequest({ params: idParamDto, body: concluirDiagnosticoDto }),
+    ordemServicoController.concluirDiagnostico,
   );
 
   return router;
