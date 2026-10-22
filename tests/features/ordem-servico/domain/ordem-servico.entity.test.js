@@ -54,4 +54,22 @@ describe('OrdemServico', () => {
       },
     );
   });
+
+  describe('adicionarPeca (Adiciona Peças/Insumos)', () => {
+    it('vale durante o diagnóstico, sem mudar o status, e devolve o evento PecasInsumosAdicionados', () => {
+      const os = ordemServico({ status: STATUS.EM_DIAGNOSTICO });
+
+      expect(os.adicionarPeca()).toMatchObject({ tipo: 'PecasInsumosAdicionados', numero: 42 });
+      expect(os.status).toBe(STATUS.EM_DIAGNOSTICO);
+    });
+
+    it.each(Object.values(STATUS).filter((status) => status !== STATUS.EM_DIAGNOSTICO))(
+      'gera ConflictError com a OS em %s',
+      (status) => {
+        expect(() => ordemServico({ status }).adicionarPeca()).toThrow(
+          new ConflictError('Só é possível adicionar peças e insumos durante o diagnóstico'),
+        );
+      },
+    );
+  });
 });

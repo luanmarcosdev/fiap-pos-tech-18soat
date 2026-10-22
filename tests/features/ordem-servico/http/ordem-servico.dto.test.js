@@ -1,4 +1,27 @@
-const { consultaDto, adicionarServicoDto } = require('@src/features/ordem-servico/http/ordem-servico.dto');
+const {
+  consultaDto,
+  adicionarServicoDto,
+  adicionarPecaDto,
+} = require('@src/features/ordem-servico/http/ordem-servico.dto');
+
+describe('adicionarPecaDto', () => {
+  const PECA_ID = '9f8e7d6c-5b4a-4321-8fed-cba987654321';
+
+  it('aceita peça e quantidade inteira positiva', () => {
+    expect(adicionarPecaDto.parse({ peca_id: PECA_ID, quantidade: 2 })).toEqual({ peca_id: PECA_ID, quantidade: 2 });
+  });
+
+  it.each([
+    ['peça inválida', { peca_id: 'abc', quantidade: 1 }],
+    ['quantidade ausente', { peca_id: PECA_ID }],
+    ['quantidade zero', { peca_id: PECA_ID, quantidade: 0 }],
+    ['quantidade decimal', { peca_id: PECA_ID, quantidade: 1.5 }],
+    ['quantidade em string', { peca_id: PECA_ID, quantidade: '2' }],
+    ['quantidade acima do limite', { peca_id: PECA_ID, quantidade: 10_001 }],
+  ])('rejeita %s', (_, body) => {
+    expect(adicionarPecaDto.safeParse(body).success).toBe(false);
+  });
+});
 
 describe('adicionarServicoDto', () => {
   it('exige servico_id em UUID', () => {

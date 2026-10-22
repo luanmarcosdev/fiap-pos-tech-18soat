@@ -3,6 +3,7 @@ jest.mock('@src/features/clientes/infra/clientes.repository');
 jest.mock('@src/features/veiculos/infra/veiculos.repository');
 jest.mock('@src/features/servicos/infra/servicos.repository');
 jest.mock('@src/features/orcamento/infra/orcamentos.repository');
+jest.mock('@src/features/pecas/infra/pecas.repository');
 
 const request = require('supertest');
 const app = require('@src/app');
@@ -11,6 +12,7 @@ const clientesRepository = require('@src/features/clientes/infra/clientes.reposi
 const veiculosRepository = require('@src/features/veiculos/infra/veiculos.repository');
 const servicosRepository = require('@src/features/servicos/infra/servicos.repository');
 const orcamentosRepository = require('@src/features/orcamento/infra/orcamentos.repository');
+const pecasRepository = require('@src/features/pecas/infra/pecas.repository');
 const { signToken } = require('@src/features/auth');
 const { buildOrdemServico } = require('../ordem-servico.fixtures');
 
@@ -76,13 +78,18 @@ describe('/api/ordens-servico', () => {
   describe('POST /:id/servicos', () => {
     const url = `/api/ordens-servico/${os.id}/servicos`;
     const servico = { id: '5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d', nome: 'Troca de óleo', preco: 120 };
-    const rascunho = { id: 'b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e', ordem_servico_id: os.id, status: 'EM_DIAGNOSTICO', servicos: [] };
+    const rascunho = {
+      id: 'b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e',
+      ordem_servico_id: os.id,
+      status: 'EM_DIAGNOSTICO',
+      servicos: [],
+    };
 
     const mockOs = (stored) => ordensServicoRepository.findById.mockResolvedValue(stored);
     // o repository mockado executa a mudança sobre o estado informado, como a transação real
     const mockOrcamento = (stored) =>
       orcamentosRepository.addServico.mockImplementation(async (ordemServicoId, change) => {
-        const { servico: item, valor_total } = await change(stored);
+        const { item, valor_total } = await change(stored);
         return { ...stored, valor_total, servicos: [...stored.servicos, item] };
       });
 
@@ -156,6 +163,109 @@ describe('/api/ordens-servico', () => {
       expect(response.status).toBe(422);
       expect(response.body).toEqual({ erro: 'Serviço não encontrado' });
       expect(orcamentosRepository.addServico).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('POST /:id/pecas', () => {
+    const url = `/api/ordens-servico/${os.id}/pecas`;
+    // registro do slice pecas, sem estoque: adicionar não exige estoque
+    const peca = {
+      id: '9f8e7d6c-5b4a-4321-8fed-cba987654321',
+      nome: 'Filtro de óleo',
+      preco_unitario: 39.9,
+      quantidade_estoque: 0,
+      estoque_minimo: 2,
+    };
+    const body = { peca_id: peca.id, quantidade: 2 };
+    const rascunho = {
+      id: 'b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e',
+      ordem_servico_id: os.id,
+      status: 'EM_DIAGNOSTICO',
+      servicos: [],
+      pecas: [],
+    };
+
+    const mockOs = (stored) => ordensServicoRepository.findById.mockResolvedValue(stored);
+    // o repository mockado executa a mudança sobre o estado informado, como a transação real
+    const mockOrcamento = (stored) =>
+      orcamentosRepository.addPeca.mockImplementation(async (ordemServicoId, change) => {
+        const { item, valor_total } = await change(stored);
+        return { ...stored, valor_total, pecas: [...stored.pecas, item] };
+      });
+
+    it('401 sem token', async () => {
+      expect((await request(app).post(url).send(body)).status).toBe(401);
+    });
+
+    it('201 com a quantidade e o preço copiado do catálogo, mesmo sem estoque', async () => {
+      mockOs(buildOrdemServico({ status: 'EM_DIAGNOSTICO' }));
+      mockOrcamento(rascunho);
+      pecasRepository.findById.mockResolvedValue(peca);
+
+      const response = await request(app).post(url).set(auth).send(body);
+
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual({
+        ...rascunho,
+        valor_total: 79.8,
+        pecas: [{ peca_id: peca.id, quantidade: 2, valor_unitario: 39.9 }],
+      });
+    });
+
+    it('400 com quantidade inválida', async () => {
+      const response = await request(app).post(url).set(auth).send({ ...body, quantidade: 0 });
+
+      expect(response.status).toBe(400);
+      expect(response.body.detalhes).toEqual([{ campo: 'quantidade', mensagem: expect.any(String) }]);
+    });
+
+    it('404 quando a OS não existe', async () => {
+      mockOs(null);
+
+      expect((await request(app).post(url).set(auth).send(body)).status).toBe(404);
+    });
+
+    it('409 quando a OS não está em diagnóstico', async () => {
+      mockOs(buildOrdemServico({ status: 'RECEBIDA' }));
+
+      const response = await request(app).post(url).set(auth).send(body);
+
+      expect(response.status).toBe(409);
+      expect(response.body).toEqual({ erro: 'Só é possível adicionar peças e insumos durante o diagnóstico' });
+      expect(orcamentosRepository.addPeca).not.toHaveBeenCalled();
+    });
+
+    it('409 com peça repetida', async () => {
+      mockOs(buildOrdemServico({ status: 'EM_DIAGNOSTICO' }));
+      mockOrcamento({ ...rascunho, pecas: [{ peca_id: peca.id, quantidade: 1, valor_unitario: 39.9 }] });
+      pecasRepository.findById.mockResolvedValue(peca);
+
+      const response = await request(app).post(url).set(auth).send(body);
+
+      expect(response.status).toBe(409);
+      expect(response.body).toEqual({ erro: 'Peça/insumo já adicionado ao orçamento' });
+    });
+
+    it('422 quando a peça não existe', async () => {
+      mockOs(buildOrdemServico({ status: 'EM_DIAGNOSTICO' }));
+      pecasRepository.findById.mockResolvedValue(null);
+
+      const response = await request(app).post(url).set(auth).send(body);
+
+      expect(response.status).toBe(422);
+      expect(response.body).toEqual({ erro: 'Peça/insumo não encontrado' });
+      expect(orcamentosRepository.addPeca).not.toHaveBeenCalled();
+    });
+
+    it('422, sem chegar ao banco, quando o total passaria do limite do orçamento', async () => {
+      mockOs(buildOrdemServico({ status: 'EM_DIAGNOSTICO' }));
+      mockOrcamento({ ...rascunho, servicos: [{ servico_id: 's1', valor_unitario: 99999999 }] });
+      pecasRepository.findById.mockResolvedValue({ ...peca, preco_unitario: 1 });
+
+      const response = await request(app).post(url).set(auth).send(body);
+
+      expect(response.status).toBe(422);
+      expect(response.body).toEqual({ erro: 'O item faria o valor total do orçamento passar do limite permitido' });
     });
   });
 
