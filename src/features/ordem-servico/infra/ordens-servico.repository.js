@@ -3,6 +3,11 @@ const { OrdemServico } = require('./ordens-servico.model');
 
 const toPlain = (model) => (model ? model.toJSON() : null);
 
+// o Postgres devolve a linha gravada (RETURNING), então o número gerado pelo banco já vem preenchido
+async function create(data) {
+  return toPlain(await OrdemServico.create(data));
+}
+
 async function findById(id) {
   return toPlain(await OrdemServico.findByPk(id));
 }
@@ -48,6 +53,7 @@ async function updateWithLock(id, change) {
 }
 
 module.exports = {
+  create,
   findById,
   findByNumero,
   findAll,

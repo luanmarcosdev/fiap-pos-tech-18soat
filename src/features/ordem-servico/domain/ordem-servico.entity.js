@@ -21,6 +21,17 @@ class OrdemServico {
   #status;
   #diagnostico;
 
+  /**
+   * Comando "Cria Ordem de Serviço" (atendente): a OS nasce RECEBIDA com a queixa do cliente.
+   * Devolve os dados a gravar, porque o id e o número só existem depois de a OS ser gravada.
+   */
+  static criar({ cliente_id, veiculo_id, queixa }) {
+    if (typeof queixa !== 'string' || queixa.trim() === '') {
+      throw new ValidationError('Queixa inválida', [{ campo: 'queixa', mensagem: 'Informe a queixa do cliente' }]);
+    }
+    return { cliente_id, veiculo_id, queixa: queixa.trim(), status: STATUS.RECEBIDA };
+  }
+
   constructor({ id, numero, cliente_id, status, diagnostico = null }) {
     if (!Object.values(STATUS).includes(status)) throw new Error(`Status inválido para a ordem de serviço ${id}`);
     this.#id = id;
@@ -41,6 +52,12 @@ class OrdemServico {
   /** Diagnóstico concluído = o orçamento já foi enviado ao cliente (lista fechada: status novo não entra sem querer). */
   get diagnosticoConcluido() {
     return [STATUS.AGUARDANDO_APROVACAO, STATUS.EM_EXECUCAO, STATUS.FINALIZADA, STATUS.ENTREGUE].includes(this.#status);
+  }
+
+  /** Evento "Ordem de Serviço Criada", tirado da OS já gravada (com id e número). */
+  criada() {
+    if (this.#status !== STATUS.RECEBIDA) throw new Error(`A ordem de serviço ${this.#id} não está recebida`);
+    return this.#evento('OrdemServicoCriada');
   }
 
   /** Comando "Inicia Diagnóstico". */

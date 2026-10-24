@@ -1,6 +1,7 @@
 const {
   listQueryDto,
   consultaDto,
+  criarDto,
   adicionarServicoDto,
   adicionarPecaDto,
   concluirDiagnosticoDto,
@@ -18,6 +19,27 @@ describe('listQueryDto', () => {
     ['limit acima de 100', { limit: '101' }],
   ])('rejeita %s', (_, query) => {
     expect(listQueryDto.safeParse(query).success).toBe(false);
+  });
+});
+
+describe('criarDto', () => {
+  const body = {
+    cliente_id: '1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d',
+    veiculo_id: '7e8f9a0b-1c2d-4e3f-8a5b-6c7d8e9f0a1b',
+    queixa: '  Barulho ao frear ',
+  };
+
+  it('remove espaços da queixa', () => {
+    expect(criarDto.parse(body)).toEqual({ ...body, queixa: 'Barulho ao frear' });
+  });
+
+  it.each([
+    ['cliente_id inválido', { ...body, cliente_id: 'abc' }],
+    ['veiculo_id ausente', { ...body, veiculo_id: undefined }],
+    ['queixa vazia', { ...body, queixa: '   ' }],
+    ['queixa longa', { ...body, queixa: 'x'.repeat(5001) }],
+  ])('rejeita %s', (_, input) => {
+    expect(criarDto.safeParse(input).success).toBe(false);
   });
 });
 

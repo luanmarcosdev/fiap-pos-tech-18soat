@@ -54,6 +54,59 @@ describe('/api/ordens-servico', () => {
     });
   });
 
+  describe('POST / (Cria Ordem de Serviço)', () => {
+    const url = '/api/ordens-servico';
+    const body = { cliente_id: os.cliente_id, veiculo_id: os.veiculo_id, queixa: 'Barulho ao frear' };
+
+    beforeEach(() => {
+      clientesRepository.findById.mockResolvedValue({ id: os.cliente_id });
+      veiculosRepository.findAllByCliente.mockResolvedValue([{ id: os.veiculo_id, placa: 'ABC1D23' }]);
+    });
+
+    it('401 sem token', async () => {
+      expect((await request(app).post(url).send(body)).status).toBe(401);
+    });
+
+    it('201 com a OS recebida e o cliente notificado', async () => {
+      ordensServicoRepository.create.mockResolvedValue(os);
+
+      const response = await request(app).post(url).set(auth).send(body);
+
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual(os);
+      expect(ordensServicoRepository.create).toHaveBeenCalledWith({ ...body, status: 'RECEBIDA' });
+      expect(console.info).toHaveBeenCalledWith(
+        `Notificação para o cliente ${os.cliente_id}: Sua ordem de serviço nº 42 foi recebida`,
+      );
+    });
+
+    it('400 sem queixa', async () => {
+      const response = await request(app).post(url).set(auth).send({ ...body, queixa: '' });
+
+      expect(response.status).toBe(400);
+      expect(ordensServicoRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('422 quando o cliente não existe', async () => {
+      clientesRepository.findById.mockResolvedValue(null);
+
+      const response = await request(app).post(url).set(auth).send(body);
+
+      expect(response.status).toBe(422);
+      expect(response.body).toEqual({ erro: 'Cliente não encontrado' });
+    });
+
+    it('422 quando o veículo não é do cliente', async () => {
+      veiculosRepository.findAllByCliente.mockResolvedValue([{ id: 'outro-veiculo' }]);
+
+      const response = await request(app).post(url).set(auth).send(body);
+
+      expect(response.status).toBe(422);
+      expect(response.body).toEqual({ erro: 'Veículo não encontrado para o cliente' });
+      expect(ordensServicoRepository.create).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GET /:id (detalhamento)', () => {
     const url = `/api/ordens-servico/${os.id}`;
 

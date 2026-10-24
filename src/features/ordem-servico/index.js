@@ -5,6 +5,7 @@ const notificador = require('./infra/notificador');
 const { NotificarCliente } = require('./application/policies/notificar-cliente');
 const { ListarOrdensServico } = require('./application/listar-ordens-servico');
 const { DetalharOrdemServico } = require('./application/detalhar-ordem-servico');
+const { CriarOrdemServico } = require('./application/criar-ordem-servico');
 const { IniciarDiagnostico } = require('./application/iniciar-diagnostico');
 const { AdicionarServico } = require('./application/adicionar-servico');
 const { AdicionarPeca } = require('./application/adicionar-peca');
@@ -30,6 +31,12 @@ const detalharOrdemServico = new DetalharOrdemServico({
   listVeiculosByCliente,
   getOrcamentoByOrdemServico,
 });
+const criarOrdemServico = new CriarOrdemServico({
+  ordensServicoRepository,
+  getClienteById,
+  listVeiculosByCliente,
+  notificarCliente,
+});
 const iniciarDiagnostico = new IniciarDiagnostico({ ordensServicoRepository, notificarCliente });
 const adicionarServico = new AdicionarServico({ ordensServicoRepository, adicionarServicoOrcamento });
 const adicionarPeca = new AdicionarPeca({ ordensServicoRepository, adicionarPecaOrcamento });
@@ -43,6 +50,7 @@ const consultarOrdemServico = new ConsultarOrdemServico({
 const ordemServicoController = new OrdemServicoController({
   listarOrdensServico,
   detalharOrdemServico,
+  criarOrdemServico,
   iniciarDiagnostico,
   adicionarServico,
   adicionarPeca,

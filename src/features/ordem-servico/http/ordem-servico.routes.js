@@ -4,6 +4,7 @@ const {
   idParamDto,
   listQueryDto,
   consultaDto,
+  criarDto,
   adicionarServicoDto,
   adicionarPecaDto,
   concluirDiagnosticoDto,
@@ -207,6 +208,46 @@ function createOrdemServicoRouter({ ordemServicoController }) {
    *       401: { $ref: '#/components/responses/NaoAutenticado' }
    */
   router.get('/', validateRequest({ query: listQueryDto }), ordemServicoController.list);
+
+  /**
+   * @openapi
+   * /ordens-servico:
+   *   post:
+   *     tags: [OrdensServico]
+   *     summary: Cria a ordem de serviço do atendimento (status RECEBIDA) e notifica o cliente
+   *     security: [{ bearerAuth: [] }]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [cliente_id, veiculo_id, queixa]
+   *             properties:
+   *               cliente_id:
+   *                 type: string
+   *                 format: uuid
+   *                 description: 'Id do cliente (veja GET /clientes?documento=...)'
+   *               veiculo_id:
+   *                 type: string
+   *                 format: uuid
+   *                 description: 'Id de um veículo do cliente (veja GET /veiculos?placa=...)'
+   *               queixa: { type: string, maxLength: 5000, example: Barulho ao frear }
+   *     responses:
+   *       201:
+   *         description: Ordem de serviço criada
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/OrdemServico' }
+   *       400: { $ref: '#/components/responses/DadosInvalidos' }
+   *       401: { $ref: '#/components/responses/NaoAutenticado' }
+   *       422:
+   *         description: 'Cliente não encontrado, ou o veículo não existe ou não é do cliente'
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Erro' }
+   */
+  router.post('/', validateRequest({ body: criarDto }), ordemServicoController.create);
 
   /**
    * @openapi
