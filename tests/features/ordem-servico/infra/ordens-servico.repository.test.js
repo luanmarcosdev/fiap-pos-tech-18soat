@@ -4,7 +4,7 @@ jest.mock('@src/infra/database/sequelize', () => ({
   sequelize: { transaction: jest.fn((callback) => callback(mockTransaction)) },
 }));
 jest.mock('@src/features/ordem-servico/infra/ordens-servico.model', () => ({
-  OrdemServico: { findByPk: jest.fn(), findOne: jest.fn(), findAndCountAll: jest.fn() },
+  OrdemServico: { create: jest.fn(), findByPk: jest.fn(), findOne: jest.fn(), findAndCountAll: jest.fn() },
 }));
 
 const { OrdemServico } = require('@src/features/ordem-servico/infra/ordens-servico.model');
@@ -12,6 +12,16 @@ const ordensServicoRepository = require('@src/features/ordem-servico/infra/orden
 const { buildOrdemServico } = require('../ordem-servico.fixtures');
 
 const os = buildOrdemServico();
+
+describe('ordensServicoRepository.create', () => {
+  it('grava e devolve objeto simples com o número gerado pelo banco', async () => {
+    OrdemServico.create.mockResolvedValue({ toJSON: () => os });
+    const dados = { cliente_id: os.cliente_id, veiculo_id: os.veiculo_id, queixa: os.queixa, status: 'RECEBIDA' };
+
+    await expect(ordensServicoRepository.create(dados)).resolves.toEqual(os);
+    expect(OrdemServico.create).toHaveBeenCalledWith(dados);
+  });
+});
 
 describe('ordensServicoRepository.findByNumero', () => {
   it('devolve objeto simples ou null', async () => {

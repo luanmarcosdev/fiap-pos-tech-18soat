@@ -24,6 +24,14 @@ describe('NotificarCliente', () => {
     });
   });
 
+  it('avisa o cliente que a OS foi recebida', async () => {
+    const { policy, notificador } = setup();
+
+    await policy.execute({ ...diagnosticoIniciado, tipo: 'OrdemServicoCriada' });
+
+    expect(notificador.enviar).toHaveBeenCalledWith({ cliente, mensagem: 'Sua ordem de serviço nº 42 foi recebida' });
+  });
+
   describe('DiagnosticoConcluido (aguardando aprovação + orçamento enviado)', () => {
     const orcamento = (pecas) => ({ valor_total: 471.7, expira_em: '2026-11-05T13:00:00.000Z', pecas });
     const concluido = (pecas) => ({ ...diagnosticoIniciado, tipo: 'DiagnosticoConcluido', orcamento: orcamento(pecas) });

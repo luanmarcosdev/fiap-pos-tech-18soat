@@ -12,6 +12,7 @@ function mensagemOrcamento({ numero, orcamento }) {
 }
 
 const MENSAGENS = {
+  OrdemServicoCriada: ({ numero }) => `Sua ordem de serviço nº ${numero} foi recebida`,
   DiagnosticoIniciado: ({ numero }) => `Sua ordem de serviço nº ${numero} está em diagnóstico`,
   DiagnosticoConcluido: mensagemOrcamento,
 };

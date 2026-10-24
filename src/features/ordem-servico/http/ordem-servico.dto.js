@@ -13,6 +13,13 @@ const consultaDto = z.object({
   documento: z.string().trim().min(11).max(18),
 });
 
+// o veículo precisa ser do cliente: o caso de uso confere (o banco só garante que os dois existem)
+const criarDto = z.object({
+  cliente_id: z.uuid(),
+  veiculo_id: z.uuid(),
+  queixa: z.string().trim().min(1).max(5000),
+});
+
 const adicionarServicoDto = z.object({
   servico_id: z.uuid(),
 });
@@ -37,6 +44,7 @@ module.exports = {
   idParamDto,
   listQueryDto,
   consultaDto,
+  criarDto,
   adicionarServicoDto,
   adicionarPecaDto,
   concluirDiagnosticoDto,

@@ -20,6 +20,42 @@ describe('OrdemServico', () => {
     expect(ordemServico({ status }).diagnosticoConcluido).toBe(esperado);
   });
 
+  describe('criar (Cria Ordem de Serviço)', () => {
+    const dados = { cliente_id: 'cliente', veiculo_id: 'veiculo', queixa: '  Barulho ao frear ' };
+
+    it('devolve os dados da OS RECEBIDA com a queixa sem espaços', () => {
+      expect(OrdemServico.criar(dados)).toEqual({
+        cliente_id: 'cliente',
+        veiculo_id: 'veiculo',
+        queixa: 'Barulho ao frear',
+        status: STATUS.RECEBIDA,
+      });
+    });
+
+    it.each([
+      ['ausente', undefined],
+      ['vazia', '   '],
+      ['não texto', 42],
+    ])('gera ValidationError com queixa %s', (_, queixa) => {
+      expect(() => OrdemServico.criar({ ...dados, queixa })).toThrow(ValidationError);
+    });
+  });
+
+  describe('criada (Ordem de Serviço Criada)', () => {
+    it('devolve o evento OrdemServicoCriada da OS gravada', () => {
+      expect(ordemServico().criada()).toEqual({
+        tipo: 'OrdemServicoCriada',
+        ordemServicoId: '3c2b1a09-8f7e-4d6c-9b5a-4f3e2d1c0b9a',
+        numero: 42,
+        clienteId: '1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d',
+      });
+    });
+
+    it('lança quando a OS já saiu de RECEBIDA', () => {
+      expect(() => ordemServico({ status: STATUS.EM_DIAGNOSTICO }).criada()).toThrow('não está recebida');
+    });
+  });
+
   describe('iniciarDiagnostico (Inicia Diagnóstico)', () => {
     it('passa de RECEBIDA para EM_DIAGNOSTICO e devolve o evento DiagnosticoIniciado', () => {
       const os = ordemServico();
