@@ -95,6 +95,19 @@ class OrdemServico {
     return this.#evento('DiagnosticoConcluido');
   }
 
+  /**
+   * Policy "Finalizar Ordem de Serviço", que reage ao "Orçamento Reprovado": a OS é encerrada sem manutenção.
+   * Já finalizada, não faz nada (devolve null): repetir a reprovação depois de uma falha termina o trabalho.
+   */
+  finalizarSemExecucao() {
+    if (this.#status === STATUS.FINALIZADA) return null;
+    if (this.#status !== STATUS.AGUARDANDO_APROVACAO) {
+      throw new ConflictError('Só é possível finalizar sem execução uma ordem de serviço aguardando aprovação');
+    }
+    this.#status = STATUS.FINALIZADA;
+    return this.#evento('OrdemServicoFinalizada');
+  }
+
   #ensureEmDiagnostico(mensagem) {
     if (this.#status !== STATUS.EM_DIAGNOSTICO) throw new ConflictError(mensagem);
   }

@@ -134,6 +134,31 @@ describe('OrdemServico', () => {
     });
   });
 
+  describe('finalizarSemExecucao (Finalizar Ordem de Serviço)', () => {
+    it('passa de AGUARDANDO_APROVACAO para FINALIZADA e devolve o evento OrdemServicoFinalizada', () => {
+      const os = ordemServico({ status: STATUS.AGUARDANDO_APROVACAO });
+
+      expect(os.finalizarSemExecucao()).toMatchObject({ tipo: 'OrdemServicoFinalizada', numero: 42 });
+      expect(os.status).toBe(STATUS.FINALIZADA);
+    });
+
+    it('já finalizada, não muda nada e devolve null (retomada depois de uma falha)', () => {
+      const os = ordemServico({ status: STATUS.FINALIZADA });
+
+      expect(os.finalizarSemExecucao()).toBeNull();
+      expect(os.status).toBe(STATUS.FINALIZADA);
+    });
+
+    it.each([STATUS.RECEBIDA, STATUS.EM_DIAGNOSTICO, STATUS.EM_EXECUCAO, STATUS.ENTREGUE])(
+      'gera ConflictError com a OS em %s',
+      (status) => {
+        expect(() => ordemServico({ status }).finalizarSemExecucao()).toThrow(
+          new ConflictError('Só é possível finalizar sem execução uma ordem de serviço aguardando aprovação'),
+        );
+      },
+    );
+  });
+
   describe('adicionarPeca (Adiciona Peças/Insumos)', () => {
     it('vale durante o diagnóstico, sem mudar o status, e devolve o evento PecasInsumosAdicionados', () => {
       const os = ordemServico({ status: STATUS.EM_DIAGNOSTICO });

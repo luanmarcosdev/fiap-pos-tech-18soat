@@ -111,6 +111,10 @@ const {
  *               em_estoque:
  *                 type: boolean
  *                 description: 'Só na conclusão: estoque menos reservas de outros orçamentos enviados cobre a quantidade'
+ *               estoque_baixado:
+ *                 type: boolean
+ *                 nullable: true
+ *                 description: 'Resultado da aprovação: true = baixado do estoque, false = a adquirir, null = não aprovado'
  *         created_at: { type: string, format: date-time }
  *         updated_at: { type: string, format: date-time }
  *     OrdemServicoDetalhe:

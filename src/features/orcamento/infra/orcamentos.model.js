@@ -56,6 +56,8 @@ const OrcamentoPeca = sequelize.define(
     unidade_medida: { type: DataTypes.STRING(10), allowNull: false },
     quantidade: { type: DataTypes.INTEGER, allowNull: false },
     valor_unitario: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
+    // "Baixar Estoque" na aprovação: null = não aprovado, true = baixado, false = a adquirir
+    estoque_baixado: { type: DataTypes.BOOLEAN, allowNull: true },
   },
   { tableName: 'orcamento_pecas', ...timestamps },
 );

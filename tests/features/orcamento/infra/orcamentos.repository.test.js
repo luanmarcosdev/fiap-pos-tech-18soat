@@ -6,7 +6,7 @@ jest.mock('@src/infra/database/sequelize', () => ({
 jest.mock('@src/features/orcamento/infra/orcamentos.model', () => ({
   Orcamento: { findOrCreate: jest.fn(), findOne: jest.fn(), findByPk: jest.fn(), update: jest.fn() },
   OrcamentoServico: { findAll: jest.fn(), create: jest.fn() },
-  OrcamentoPeca: { findAll: jest.fn(), create: jest.fn() },
+  OrcamentoPeca: { findAll: jest.fn(), create: jest.fn(), update: jest.fn() },
 }));
 
 const { Op, fn, col } = require('sequelize');
@@ -120,6 +120,37 @@ describe('orcamentosRepository.updateWithLock', () => {
       }),
     ).rejects.toThrow('O orçamento já foi gerado');
     expect(row.update).not.toHaveBeenCalled();
+  });
+});
+
+describe('orcamentosRepository.updateWithLockById', () => {
+  it('trava o orçamento pelo id, aplica a mudança sobre ele com os itens e grava', async () => {
+    const row = asModel(orcamento);
+    const aprovado = { ...comItens, status: 'APROVADO' };
+    Orcamento.findOne.mockResolvedValue(row);
+    Orcamento.findByPk.mockResolvedValue(asModel(aprovado));
+    const change = jest.fn().mockReturnValue({ status: 'APROVADO' });
+
+    const result = await orcamentosRepository.updateWithLockById(orcamento.id, change);
+
+    expect(Orcamento.findOne).toHaveBeenCalledWith({ ...lockedQuery, where: { id: orcamento.id } });
+    expect(change).toHaveBeenCalledWith(comItens);
+    expect(row.update).toHaveBeenCalledWith({ status: 'APROVADO' }, { transaction: mockTransaction });
+    expect(result).toEqual(aprovado);
+  });
+
+  it('devolve null quando o orçamento não existe', async () => {
+    Orcamento.findOne.mockResolvedValue(null);
+
+    await expect(orcamentosRepository.updateWithLockById('id', jest.fn())).resolves.toBeNull();
+  });
+});
+
+describe('orcamentosRepository.marcarEstoqueBaixado', () => {
+  it('grava o resultado da baixa no item', async () => {
+    await orcamentosRepository.marcarEstoqueBaixado('item', false);
+
+    expect(OrcamentoPeca.update).toHaveBeenCalledWith({ estoque_baixado: false }, { where: { id: 'item' } });
   });
 });
 
