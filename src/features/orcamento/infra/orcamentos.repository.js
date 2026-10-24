@@ -59,18 +59,23 @@ async function addItem(ItemModel, ordemServicoId, change) {
 }
 
 /**
- * Altera o orçamento da OS com a linha travada: `change` recebe o orçamento atual com os itens, aplica a regra
+ * Altera o orçamento com a linha travada: `change` recebe o orçamento atual com os itens, aplica a regra
  * de domínio e devolve os novos valores. Se `change` lançar erro, nada é gravado.
- * Devolve o orçamento atualizado com os itens ou null se a OS ainda não tiver orçamento.
+ * Devolve o orçamento atualizado com os itens ou null se ele não existir.
  */
-async function updateWithLock(ordemServicoId, change) {
+async function updateLocked(where, change) {
   return sequelize.transaction(async (transaction) => {
-    const row = await findLocked({ ordem_servico_id: ordemServicoId }, transaction);
+    const row = await findLocked(where, transaction);
     if (!row) return null;
     const data = await change(await withItens(row, transaction));
     await row.update(data, { transaction });
     return findWithItens(row.id, transaction);
   });
+}
+
+/** Resultado da policy "Baixar Estoque" para um item do orçamento (true = baixado, false = a adquirir). */
+async function marcarEstoqueBaixado(itemId, estoqueBaixado) {
+  await OrcamentoPeca.update({ estoque_baixado: estoqueBaixado }, { where: { id: itemId } });
 }
 
 /**
@@ -96,6 +101,9 @@ module.exports = {
   addServico: (ordemServicoId, change) => addItem(OrcamentoServico, ordemServicoId, change),
   addPeca: (ordemServicoId, change) => addItem(OrcamentoPeca, ordemServicoId, change),
   findByOrdemServico,
-  updateWithLock,
+  // pela OS (Gerar Orçamento, a partir do diagnóstico) ou pelo id do orçamento (Aprova/Reprova Orçamento)
+  updateWithLock: (ordemServicoId, change) => updateLocked({ ordem_servico_id: ordemServicoId }, change),
+  updateWithLockById: (id, change) => updateLocked({ id }, change),
+  marcarEstoqueBaixado,
   sumReservasByPeca,
 };

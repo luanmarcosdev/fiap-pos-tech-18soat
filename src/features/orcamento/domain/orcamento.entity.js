@@ -106,6 +106,36 @@ class Orcamento {
     this.#expiraEm = new Date(agora.getTime() + VALIDADE_EM_DIAS * UM_DIA_EM_MS);
   }
 
+  /**
+   * Comando "Aprova Orçamento" (cliente, registrado pelo atendente). Já aprovado, não faz nada: repetir a
+   * aprovação depois de uma falha termina a baixa de estoque das peças que ficaram pendentes.
+   */
+  aprovar(agora) {
+    if (this.#status === STATUS.APROVADO) return;
+    this.#ensureAguardandoAprovacao(agora);
+    this.#status = STATUS.APROVADO;
+  }
+
+  /**
+   * Comando "Reprova Orçamento" (cliente, registrado pelo atendente). Já reprovado, não faz nada: repetir a
+   * reprovação depois de uma falha termina a finalização da OS.
+   */
+  reprovar(agora) {
+    if (this.#status === STATUS.REPROVADO) return;
+    this.#ensureAguardandoAprovacao(agora);
+    this.#status = STATUS.REPROVADO;
+  }
+
+  /** Só o orçamento enviado e ainda vigente aceita a decisão do cliente. */
+  #ensureAguardandoAprovacao(agora) {
+    if (this.#status === STATUS.EM_DIAGNOSTICO) throw new ConflictError('O orçamento ainda não foi enviado ao cliente');
+    if (this.#status !== STATUS.ENVIADO) throw new ConflictError('O orçamento já foi aprovado, reprovado ou expirado');
+    // a expiração (status EXPIRADO) é da policy "Expirar Orçamento"; aqui só não se decide sobre orçamento vencido
+    if (agora.getTime() >= new Date(this.#expiraEm).getTime()) {
+      throw new ConflictError('O orçamento passou da validade e não pode mais ser aprovado ou reprovado');
+    }
+  }
+
   /** Inclui o item só se o total continuar cabendo no orçamento. */
   #incluir(itens, item) {
     itens.push(item);

@@ -3,6 +3,7 @@ const { listVeiculosByCliente } = require('../veiculos');
 const ordensServicoRepository = require('./infra/ordens-servico.repository');
 const notificador = require('./infra/notificador');
 const { NotificarCliente } = require('./application/policies/notificar-cliente');
+const { FinalizarOrdemServico } = require('./application/policies/finalizar-ordem-servico');
 const { ListarOrdensServico } = require('./application/listar-ordens-servico');
 const { DetalharOrdemServico } = require('./application/detalhar-ordem-servico');
 const { CriarOrdemServico } = require('./application/criar-ordem-servico');
@@ -24,6 +25,7 @@ const getOrcamentoEnviadoByOrdemServico = (...args) =>
   require('../orcamento').getOrcamentoEnviadoByOrdemServico(...args);
 
 const notificarCliente = new NotificarCliente({ getClienteById, notificador });
+const finalizarOrdemServico = new FinalizarOrdemServico({ ordensServicoRepository });
 const listarOrdensServico = new ListarOrdensServico({ ordensServicoRepository });
 const detalharOrdemServico = new DetalharOrdemServico({
   ordensServicoRepository,
@@ -61,4 +63,8 @@ const ordemServicoController = new OrdemServicoController({
 module.exports = {
   routes: createOrdemServicoRouter({ ordemServicoController }),
   publicRoutes: createOrdemServicoPublicRouter({ ordemServicoController }),
+
+  // API pública para o orcamento ("Reprova Orçamento"): encerra a OS aguardando aprovação (idempotente) e devolve
+  // a OS. Lança NotFoundError e ConflictError (OS fora de AGUARDANDO_APROVACAO)
+  finalizarOrdemServico: (id) => finalizarOrdemServico.execute(id),
 };

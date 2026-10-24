@@ -208,4 +208,62 @@ describe('Orcamento', () => {
       );
     });
   });
+
+  describe.each([
+    ['aprovar', 'Aprova Orçamento', STATUS.APROVADO, STATUS.REPROVADO],
+    ['reprovar', 'Reprova Orçamento', STATUS.REPROVADO, STATUS.APROVADO],
+  ])('%s (%s)', (metodo, _, decidido, outraDecisao) => {
+    const agora = new Date('2026-10-24T13:00:00.000Z');
+    const enviado = (overrides = {}) =>
+      orcamento({ status: STATUS.ENVIADO, expira_em: new Date('2026-11-05T13:00:00.000Z'), ...overrides });
+
+    it(`passa de ENVIADO para ${decidido} dentro da validade`, () => {
+      const o = enviado();
+
+      o[metodo](agora);
+
+      expect(o.status).toBe(decidido);
+    });
+
+    it('já decidido assim, não muda nada (retomada depois de uma falha)', () => {
+      const o = enviado({ status: decidido });
+
+      o[metodo](agora);
+
+      expect(o.status).toBe(decidido);
+    });
+
+    it('gera ConflictError com o orçamento ainda em diagnóstico', () => {
+      expect(() => orcamento()[metodo](agora)).toThrow(
+        new ConflictError('O orçamento ainda não foi enviado ao cliente'),
+      );
+    });
+
+    it.each([outraDecisao, STATUS.EXPIRADO])('gera ConflictError com o orçamento %s', (status) => {
+      const o = enviado({ status });
+
+      expect(() => o[metodo](agora)).toThrow(new ConflictError('O orçamento já foi aprovado, reprovado ou expirado'));
+      expect(o.status).toBe(status);
+    });
+
+    it.each([
+      ['no instante em que vence', '2026-10-24T13:00:00.000Z'],
+      ['depois de vencer', '2026-10-01T00:00:00.000Z'],
+    ])('gera ConflictError, sem mudar o status, %s', (__, expiraEm) => {
+      const o = enviado({ expira_em: new Date(expiraEm) });
+
+      expect(() => o[metodo](agora)).toThrow(
+        new ConflictError('O orçamento passou da validade e não pode mais ser aprovado ou reprovado'),
+      );
+      expect(o.status).toBe(STATUS.ENVIADO);
+    });
+
+    it('aceita a validade como texto (vinda do JSON)', () => {
+      const o = enviado({ expira_em: '2026-11-05T13:00:00.000Z' });
+
+      o[metodo](agora);
+
+      expect(o.status).toBe(decidido);
+    });
+  });
 });
