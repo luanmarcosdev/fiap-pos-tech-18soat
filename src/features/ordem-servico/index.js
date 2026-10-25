@@ -14,6 +14,10 @@ const { ConcluirDiagnostico } = require('./application/concluir-diagnostico');
 const { ConsultarOrdemServico } = require('./application/consultar-ordem-servico');
 const { OrdemServicoController } = require('./http/ordem-servico.controller');
 const { createOrdemServicoRouter, createOrdemServicoPublicRouter } = require('./http/ordem-servico.routes');
+const { IniciarManutencao } = require('./application/iniciar-manutencao');
+const { FinalizarManutencao } = require('./application/finalizar-manutencao');
+const { EntregarVeiculo } = require('./application/entregar-veiculo');
+const { ConfirmarPagamento } = require('./application/policies/confirmar-pagamento');
 
 // require na chamada: o orçamento vai usar a API da OS (mudar o status), e um require circular no topo
 // entregaria um módulo vazio a quem fosse carregado por último
@@ -40,6 +44,10 @@ const criarOrdemServico = new CriarOrdemServico({
   notificarCliente,
 });
 const iniciarDiagnostico = new IniciarDiagnostico({ ordensServicoRepository, notificarCliente });
+const iniciarManutencao = new IniciarManutencao({ordensServicoRepository, notificarCliente});
+const finalizarManutencao = new FinalizarManutencao({ordensServicoRepository, notificarCliente});
+const confirmarPagamento = new ConfirmarPagamento({ordensServicoRepository, notificarCliente});
+const entregarVeiculo = new EntregarVeiculo({ordensServicoRepository, notificarCliente});
 const adicionarServico = new AdicionarServico({ ordensServicoRepository, adicionarServicoOrcamento });
 const adicionarPeca = new AdicionarPeca({ ordensServicoRepository, adicionarPecaOrcamento });
 const concluirDiagnostico = new ConcluirDiagnostico({ ordensServicoRepository, gerarOrcamento, notificarCliente });
@@ -58,6 +66,11 @@ const ordemServicoController = new OrdemServicoController({
   adicionarPeca,
   concluirDiagnostico,
   consultarOrdemServico,
+  iniciarManutencao,
+  finalizarOrdemServico,
+  finalizarManutencao,
+  entregarVeiculo,
+  confirmarPagamento
 });
 
 module.exports = {

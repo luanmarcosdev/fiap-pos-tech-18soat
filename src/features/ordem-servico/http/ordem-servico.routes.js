@@ -28,6 +28,11 @@ const {
  *           enum: [RECEBIDA, EM_DIAGNOSTICO, AGUARDANDO_APROVACAO, EM_EXECUCAO, FINALIZADA, ENTREGUE]
  *         created_at: { type: string, format: date-time }
  *         updated_at: { type: string, format: date-time }
+ *     PagamentoConfirmado:
+ *       type: object
+ *       properties:
+ *          osNumber: {type: integer, nullable: false}
+ *          success: {type: boolean, nullable: false}
  *     OrdemServicoConsulta:
  *       type: object
  *       description: 'Visão do cliente: sem ids internos nem dados pessoais'
@@ -166,6 +171,11 @@ const {
  *       content:
  *         application/json:
  *           schema: { $ref: '#/components/schemas/OrdemServico' }
+ *       PagamentoConfirmadoResposta:
+ *              description: Pagamento Confirmado
+ *              content:
+ *                application/json:
+ *                  schema: { $ref: '#/components/schemas/PagamentoConfirmado' }
  *     OrdemServicoNaoEncontrada:
  *       description: Ordem de serviço não encontrada
  *       content:
@@ -298,6 +308,95 @@ function createOrdemServicoRouter({ ordemServicoController }) {
     '/:id/iniciar-diagnostico',
     validateRequest({ params: idParamDto }),
     ordemServicoController.iniciarDiagnostico,
+  );
+
+   /**
+   * @openapi
+   * /ordens-servico/{id}/iniciar-manutencao:
+   *   post:
+   *     tags: ['Fluxo da OS · Manutenção']
+   *     summary: Inicia a manutenção (AGUARDANDO_APROVACAO → EM_EXECUCAO) e notifica o cliente
+   *     security: [{ bearerAuth: [] }]
+   *     parameters: [{ $ref: '#/components/parameters/OrdemServicoId' }]
+   *     responses:
+   *       200: { $ref: '#/components/responses/OrdemServicoResposta' }
+   *       400: { $ref: '#/components/responses/DadosInvalidos' }
+   *       401: { $ref: '#/components/responses/NaoAutenticado' }
+   *       404: { $ref: '#/components/responses/OrdemServicoNaoEncontrada' }
+   *       409: { $ref: '#/components/responses/StatusNaoPermiteComando' }
+   */
+  router.post(
+    '/:id/iniciar-manutencao',
+    validateRequest({ params: idParamDto }),
+    ordemServicoController.iniciarManutencao,
+  );
+
+  /**
+   * @openapi
+   * /ordens-servico/{id}/finalizar-manutencao:
+   *   post:
+   *     tags: ['Fluxo da OS · Manutenção']
+   *     summary: finaliza a manutenção (FINALIZADA) e notifica o cliente
+   *     security: [{ bearerAuth: [] }]
+   *     parameters: [{ $ref: '#/components/parameters/OrdemServicoId' }]
+   *     responses:
+   *       200: { $ref: '#/components/responses/OrdemServicoResposta' }
+   *       400: { $ref: '#/components/responses/DadosInvalidos' }
+   *       401: { $ref: '#/components/responses/NaoAutenticado' }
+   *       404: { $ref: '#/components/responses/OrdemServicoNaoEncontrada' }
+   *       409: { $ref: '#/components/responses/StatusNaoPermiteComando' }
+   */
+  router.post(
+    '/:id/finalizar-manutencao',
+    validateRequest({ params: idParamDto }),
+    ordemServicoController.finalizarManutencao,
+  );
+
+  /**
+   * @openapi
+   * /ordens-servico/{id}/entregar-veiculo:
+   *   post:
+   *     tags: ['Fluxo da OS · Veículo']
+   *     summary: muda o status da OS para ENTREGUE e notifica o cliente
+   *     security: [{ bearerAuth: [] }]
+   *     parameters: [{ $ref: '#/components/parameters/OrdemServicoId' }]
+   *     responses:
+   *       200: { $ref: '#/components/responses/OrdemServicoResposta' }
+   *       400: { $ref: '#/components/responses/DadosInvalidos' }
+   *       401: { $ref: '#/components/responses/NaoAutenticado' }
+   *       404: { $ref: '#/components/responses/OrdemServicoNaoEncontrada' }
+   *       409: { $ref: '#/components/responses/StatusNaoPermiteComando' }
+   */
+  router.post(
+    '/:id/entregar-veiculo',
+    validateRequest({ params: idParamDto }),
+    ordemServicoController.entregarVeiculo,
+  );
+
+  /**
+   * @openapi
+   * /ordens-servico/{id}/confirmar-pagamento:
+   *   post:
+   *     tags: ['Fluxo da OS · Pagamento']
+   *     summary: confirma pagamento e notifica o cliente
+   *     security: [{ bearerAuth: [] }]
+   *     parameters: [{ $ref: '#/components/parameters/OrdemServicoId' }]
+   *     responses:
+   *       200:
+   *         description: Pagamento Confirmado
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/PagamentoConfirmado'
+   *       400: { $ref: '#/components/responses/DadosInvalidos' }
+   *       401: { $ref: '#/components/responses/NaoAutenticado' }
+   *       404: { $ref: '#/components/responses/OrdemServicoNaoEncontrada' }
+   *       409: { $ref: '#/components/responses/StatusNaoPermiteComando' }
+  */
+  router.post(
+    '/:id/confirmar-pagamento',
+    validateRequest({ params: idParamDto }),
+    ordemServicoController.confirmarPagamento,
   );
 
   /**

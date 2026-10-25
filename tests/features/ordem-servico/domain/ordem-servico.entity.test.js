@@ -84,6 +84,64 @@ describe('OrdemServico', () => {
     );
   });
 
+  describe('iniciarManutencao (Inicia Manutenção)', () => {
+    it('passa de AGUARDANDO_APROVACAO para EM_EXECUCAO e devolve o evento ManutencaoIniciada', () => {
+      const os = ordemServico({ status: STATUS.AGUARDANDO_APROVACAO });
+
+      const evento = os.iniciarManutencao();
+
+      expect(os.status).toBe(STATUS.EM_EXECUCAO);
+      expect(evento).toMatchObject({ tipo: 'ManutencaoIniciada', numero: 42 });
+    });
+
+    it.each(Object.values(STATUS).filter((status) => status !== STATUS.AGUARDANDO_APROVACAO))(
+      'gera ConflictError com a OS em %s',
+      (status) => {
+        expect(() => ordemServico({ status }).iniciarManutencao()).toThrow(
+          new ConflictError('Só é possível iniciar o manutenção de uma ordem de serviço aguardando aprovação'),
+        );
+      },
+    );
+  });
+
+  describe('finalizarManutencao (Finaliza Manutenção)', () => {
+    it('passa para FINALIZADA e devolve o evento ManutencaoFinalizada', () => {
+      const os = ordemServico({ status: STATUS.EM_EXECUCAO });
+
+      const evento = os.finalizarManutencao();
+
+      expect(os.status).toBe(STATUS.FINALIZADA);
+      expect(evento).toMatchObject({ tipo: 'ManutencaoFinalizada', numero: 42 });
+    });
+
+    it('gera ConflictError ao tentar finalizar uma OS já ENTREGUE', () => {
+      const os = ordemServico({ status: STATUS.ENTREGUE });
+
+      expect(() => os.finalizarManutencao()).toThrow(
+        new ConflictError('Não é possível finalizar uma ordem de serviço já entregue'),
+      );
+    });
+  });
+
+  describe('confirmarPagamento (Confirmar Pagamento)', () => {
+    it('devolve o evento PagamentoConfirmado quando a OS está FINALIZADA', () => {
+      const os = ordemServico({ status: STATUS.FINALIZADA });
+
+      const evento = os.confirmarPagamento();
+
+      expect(evento).toMatchObject({ tipo: 'PagamentoConfirmado', numero: 42 });
+    });
+
+    it.each(Object.values(STATUS).filter((status) => status !== STATUS.FINALIZADA))(
+      'gera ConflictError com a OS em %s',
+      (status) => {
+        expect(() => ordemServico({ status }).confirmarPagamento()).toThrow(
+          new ConflictError('Não é possível realizar o pagamento de uma OS sem manutenção finalizada'),
+        );
+      },
+    );
+  });
+
   describe('adicionarServico (Adiciona Serviço)', () => {
     it('vale durante o diagnóstico, sem mudar o status, e devolve o evento ServicoAdicionado', () => {
       const os = ordemServico({ status: STATUS.EM_DIAGNOSTICO });
@@ -154,6 +212,49 @@ describe('OrdemServico', () => {
       (status) => {
         expect(() => ordemServico({ status }).finalizarSemExecucao()).toThrow(
           new ConflictError('Só é possível finalizar sem execução uma ordem de serviço aguardando aprovação'),
+        );
+      },
+    );
+  });
+
+  describe('finalizarEmExecucao (Finalizar Manutenção em Execução)', () => {
+    it('passa de EM_EXECUCAO para FINALIZADA e devolve o evento OrdemServicoFinalizada', () => {
+      const os = ordemServico({ status: STATUS.EM_EXECUCAO });
+
+      expect(os.finalizarEmExecucao()).toMatchObject({ tipo: 'OrdemServicoFinalizada', numero: 42 });
+      expect(os.status).toBe(STATUS.FINALIZADA);
+    });
+
+    it('já finalizada, não muda nada e devolve null', () => {
+      const os = ordemServico({ status: STATUS.FINALIZADA });
+
+      expect(os.finalizarEmExecucao()).toBeNull();
+      expect(os.status).toBe(STATUS.FINALIZADA);
+    });
+
+    it.each([STATUS.RECEBIDA, STATUS.EM_DIAGNOSTICO, STATUS.AGUARDANDO_APROVACAO, STATUS.ENTREGUE])(
+      'gera ConflictError com a OS em %s',
+      (status) => {
+        expect(() => ordemServico({ status }).finalizarEmExecucao()).toThrow(
+          new ConflictError('Só é possível finalizar uma manutenção que está em execução'),
+        );
+      },
+    );
+  });
+
+  describe('entregarVeiculo (Entregar Veículo)', () => {
+    it('passa de FINALIZADA para ENTREGUE e devolve o evento VeiculoEntregue', () => {
+      const os = ordemServico({ status: STATUS.FINALIZADA });
+
+      expect(os.entregarVeiculo()).toMatchObject({ tipo: 'VeiculoEntregue', numero: 42 });
+      expect(os.status).toBe(STATUS.ENTREGUE);
+    });
+
+    it.each(Object.values(STATUS).filter((status) => status !== STATUS.FINALIZADA))(
+      'gera ConflictError com a OS em %s',
+      (status) => {
+        expect(() => ordemServico({ status }).entregarVeiculo()).toThrow(
+          new ConflictError('Só é possível entregar um veículo de uma ordem de serviço com manutenção finalizada'),
         );
       },
     );

@@ -7,6 +7,10 @@ class OrdemServicoController {
   #adicionarPeca;
   #concluirDiagnostico;
   #consultarOrdemServico;
+  #iniciarManutencao;
+  #finalizarManutencao;
+  #entregarVeiculo;
+  #confirmarPagamento;
 
   constructor({
     listarOrdensServico,
@@ -17,6 +21,10 @@ class OrdemServicoController {
     adicionarPeca,
     concluirDiagnostico,
     consultarOrdemServico,
+    iniciarManutencao,
+    finalizarManutencao,
+    entregarVeiculo,
+    confirmarPagamento
   }) {
     this.#listarOrdensServico = listarOrdensServico;
     this.#detalharOrdemServico = detalharOrdemServico;
@@ -26,6 +34,10 @@ class OrdemServicoController {
     this.#adicionarPeca = adicionarPeca;
     this.#concluirDiagnostico = concluirDiagnostico;
     this.#consultarOrdemServico = consultarOrdemServico;
+    this.#iniciarManutencao = iniciarManutencao
+    this.#finalizarManutencao = finalizarManutencao,
+    this.#entregarVeiculo = entregarVeiculo,
+    this.#confirmarPagamento = confirmarPagamento
   }
 
   list = async (req, res) => {
@@ -67,6 +79,27 @@ class OrdemServicoController {
     const ordemServico = await this.#consultarOrdemServico.execute(req.body);
     res.status(200).json(ordemServico);
   };
+
+  iniciarManutencao = async (req, res) => {
+    const ordemServico = await this.#iniciarManutencao.execute(req.params.id);
+    res.status(200).json(ordemServico);
+  };
+
+  finalizarManutencao = async (req, res) => {
+    const ordemServico = await this.#finalizarManutencao.execute(req.params.id);
+    res.status(200).json(ordemServico);
+  };
+  
+  entregarVeiculo = async (req, res) => {
+    const ordemServico = await this.#entregarVeiculo.execute(req.params.id);
+    res.status(200).json(ordemServico);
+  };
+
+  confirmarPagamento = async (req, res) => {
+    const ordemServico = await this.#confirmarPagamento.execute(req.params.id);
+    res.status(200).json(ordemServico);
+  }
+
 }
 
 module.exports = { OrdemServicoController };
