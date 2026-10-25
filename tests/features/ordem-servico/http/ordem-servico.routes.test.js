@@ -526,6 +526,7 @@ describe('/api/ordens-servico', () => {
       expect(response.body).toEqual({
         numero: 42,
         status: 'RECEBIDA',
+        situacao: 'Ordem de serviço recebida',
         queixa: 'Barulho ao frear',
         diagnostico: null,
         veiculo: { placa: 'ABC1D23', marca: 'Volkswagen', modelo: 'Gol 1.0', ano: 2020 },
