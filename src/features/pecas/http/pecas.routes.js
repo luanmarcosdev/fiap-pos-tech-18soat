@@ -58,7 +58,7 @@ function createPecasRouter({ pecasController }) {
    * @openapi
    * /pecas:
    *   post:
-   *     tags: [Pecas]
+   *     tags: ['Cadastros · Peças/Insumos']
    *     summary: Cadastra uma peça ou insumo (o estoque começa em zero)
    *     security: [{ bearerAuth: [] }]
    *     requestBody:
@@ -80,7 +80,7 @@ function createPecasRouter({ pecasController }) {
    *           application/json:
    *             schema: { $ref: '#/components/schemas/Erro' }
    *   get:
-   *     tags: [Pecas]
+   *     tags: ['Cadastros · Peças/Insumos']
    *     summary: Lista peças e insumos com paginação e filtros
    *     security: [{ bearerAuth: [] }]
    *     parameters:
@@ -117,7 +117,7 @@ function createPecasRouter({ pecasController }) {
    * @openapi
    * /pecas/{id}:
    *   get:
-   *     tags: [Pecas]
+   *     tags: ['Cadastros · Peças/Insumos']
    *     summary: Busca uma peça pelo id
    *     security: [{ bearerAuth: [] }]
    *     parameters: [{ $ref: '#/components/parameters/PecaId' }]
@@ -127,7 +127,7 @@ function createPecasRouter({ pecasController }) {
    *       401: { $ref: '#/components/responses/NaoAutenticado' }
    *       404: { $ref: '#/components/responses/PecaNaoEncontrada' }
    *   put:
-   *     tags: [Pecas]
+   *     tags: ['Cadastros · Peças/Insumos']
    *     summary: Atualiza dados cadastrais e preço (não altera o estoque)
    *     security: [{ bearerAuth: [] }]
    *     parameters: [{ $ref: '#/components/parameters/PecaId' }]
@@ -147,7 +147,7 @@ function createPecasRouter({ pecasController }) {
    *           application/json:
    *             schema: { $ref: '#/components/schemas/Erro' }
    *   delete:
-   *     tags: [Pecas]
+   *     tags: ['Cadastros · Peças/Insumos']
    *     summary: Remove uma peça (soft delete)
    *     security: [{ bearerAuth: [] }]
    *     parameters: [{ $ref: '#/components/parameters/PecaId' }]
@@ -165,7 +165,7 @@ function createPecasRouter({ pecasController }) {
    * @openapi
    * /pecas/{id}/entradas:
    *   post:
-   *     tags: [Pecas]
+   *     tags: ['Cadastros · Peças/Insumos']
    *     summary: Registra uma entrada de estoque (compra ou reposição)
    *     security: [{ bearerAuth: [] }]
    *     parameters: [{ $ref: '#/components/parameters/PecaId' }]

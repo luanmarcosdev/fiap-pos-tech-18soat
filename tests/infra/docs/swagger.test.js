@@ -33,4 +33,16 @@ describe('swaggerSpec', () => {
 
     expect(nullKeys).toEqual([]);
   });
+
+  it('toda operação tem uma das tags declaradas (senão cai fora dos grupos, no fim da página)', () => {
+    const spec = load();
+    const declaradas = spec.tags.map(({ name }) => name);
+    const foraDosGrupos = Object.entries(spec.paths).flatMap(([path, operations]) =>
+      Object.entries(operations)
+        .filter(([, { tags = [] }]) => tags.length !== 1 || !declaradas.includes(tags[0]))
+        .map(([method]) => `${method.toUpperCase()} ${path}`),
+    );
+
+    expect(foraDosGrupos).toEqual([]);
+  });
 });

@@ -31,7 +31,7 @@ function createOrcamentoRouter({ orcamentoController }) {
    * @openapi
    * /orcamentos/{id}/aprovar:
    *   post:
-   *     tags: [Orcamentos]
+   *     tags: ['Fluxo da OS · Orçamento']
    *     summary: Registra a aprovação do cliente (ENVIADO → APROVADO) e baixa o estoque das peças/insumos
    *     description: >-
    *       Peça/insumo sem estoque suficiente não impede a aprovação: fica com estoque_baixado = false e a compra é
@@ -55,7 +55,7 @@ function createOrcamentoRouter({ orcamentoController }) {
    * @openapi
    * /orcamentos/{id}/reprovar:
    *   post:
-   *     tags: [Orcamentos]
+   *     tags: ['Fluxo da OS · Orçamento']
    *     summary: Registra a reprovação do cliente (ENVIADO → REPROVADO) e finaliza a ordem de serviço
    *     description: 'A OS vai de AGUARDANDO_APROVACAO para FINALIZADA, sem manutenção; a reserva das peças cai.'
    *     security: [{ bearerAuth: [] }]
