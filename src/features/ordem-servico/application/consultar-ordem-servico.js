@@ -1,8 +1,38 @@
 const { NotFoundError } = require('../../../shared/errors');
-const { OrdemServico } = require('../domain/ordem-servico.entity');
+const { OrdemServico, STATUS } = require('../domain/ordem-servico.entity');
 
 // mesma resposta para OS inexistente e documento que não confere, para não revelar quais números existem
 const NOT_FOUND = 'Ordem de serviço não encontrada';
+
+const SITUACAO_POR_STATUS = {
+  [STATUS.RECEBIDA]: 'Ordem de serviço recebida',
+  [STATUS.EM_DIAGNOSTICO]: 'Veículo em diagnóstico',
+  [STATUS.AGUARDANDO_APROVACAO]: 'Orçamento aguardando sua aprovação',
+  [STATUS.EM_EXECUCAO]: 'Em manutenção',
+  [STATUS.FINALIZADA]: 'Manutenção finalizada',
+  [STATUS.ENTREGUE]: 'Veículo entregue',
+};
+
+// status do orçamento como a API pública do slice orcamento devolve; o domínio dele não é importado daqui
+const SITUACAO_POR_ORCAMENTO = {
+  APROVADO: 'Orçamento aprovado. Aguardando o início da manutenção',
+  REPROVADO: 'Orçamento reprovado. Ordem de serviço encerrada',
+  EXPIRADO: 'Orçamento expirado. Ordem de serviço encerrada',
+};
+
+/**
+ * Situação para o cliente ler. Depois do "Aprova Orçamento" a OS segue AGUARDANDO_APROVACAO até o "Inicia
+ * Manutenção" (event storming), então o status sozinho faria o cliente achar que a aprovação não foi registrada.
+ * A OS não muda de status aqui: é só a leitura dos dois status juntos.
+ */
+function situacao(status, orcamentoStatus) {
+  const decisao = SITUACAO_POR_ORCAMENTO[orcamentoStatus];
+  // inclui reprovado/expirado com a OS ainda não finalizada (falha no meio da policy "Finalizar Ordem de Serviço")
+  if (status === STATUS.AGUARDANDO_APROVACAO && decisao) return decisao;
+  // finalizada com orçamento aprovado é manutenção concluída; com reprovado/expirado, encerrada sem manutenção
+  if (status === STATUS.FINALIZADA && orcamentoStatus !== 'APROVADO' && decisao) return decisao;
+  return SITUACAO_POR_STATUS[status];
+}
 
 /**
  * Comando "Consulta Ordem de Serviço" (cliente, API aberta): o cliente se identifica com o número da OS e o
@@ -62,6 +92,7 @@ class ConsultarOrdemServico {
     return {
       numero,
       status,
+      situacao: situacao(status, orcamento?.status),
       queixa,
       diagnostico,
       veiculo: veiculo

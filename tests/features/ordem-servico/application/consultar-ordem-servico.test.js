@@ -62,6 +62,7 @@ describe('ConsultarOrdemServico', () => {
     expect(result).toEqual({
       numero: 42,
       status: 'EM_DIAGNOSTICO',
+      situacao: 'Veículo em diagnóstico',
       queixa: 'Barulho ao frear',
       diagnostico: 'Pastilhas gastas',
       veiculo: { placa: 'ABC1D23', marca: 'Volkswagen', modelo: 'Gol 1.0', ano: 2020 },
@@ -106,6 +107,29 @@ describe('ConsultarOrdemServico', () => {
     const { useCase } = setup({ stored: { ...os, status: 'EM_EXECUCAO' }, orcamentoDaOs: null });
 
     await expect(useCase.execute(consulta)).resolves.toMatchObject({ orcamento: null });
+  });
+
+  it.each([
+    ['RECEBIDA', null, 'Ordem de serviço recebida'],
+    ['EM_DIAGNOSTICO', null, 'Veículo em diagnóstico'],
+    ['AGUARDANDO_APROVACAO', 'ENVIADO', 'Orçamento aguardando sua aprovação'],
+    // a OS só sai de AGUARDANDO_APROVACAO no "Inicia Manutenção"
+    ['AGUARDANDO_APROVACAO', 'APROVADO', 'Orçamento aprovado. Aguardando o início da manutenção'],
+    // reprovado/expirado antes de a policy "Finalizar Ordem de Serviço" terminar
+    ['AGUARDANDO_APROVACAO', 'REPROVADO', 'Orçamento reprovado. Ordem de serviço encerrada'],
+    ['AGUARDANDO_APROVACAO', 'EXPIRADO', 'Orçamento expirado. Ordem de serviço encerrada'],
+    ['EM_EXECUCAO', 'APROVADO', 'Em manutenção'],
+    ['FINALIZADA', 'APROVADO', 'Manutenção finalizada'],
+    ['FINALIZADA', 'REPROVADO', 'Orçamento reprovado. Ordem de serviço encerrada'],
+    ['FINALIZADA', 'EXPIRADO', 'Orçamento expirado. Ordem de serviço encerrada'],
+    ['ENTREGUE', 'APROVADO', 'Veículo entregue'],
+  ])('com a OS %s e o orçamento %s, a situação é "%s"', async (status, orcamentoStatus, esperada) => {
+    const orcamentoDaOs = orcamentoStatus ? { ...orcamento, status: orcamentoStatus } : null;
+    const { useCase } = setup({ stored: { ...os, status }, orcamentoDaOs });
+
+    const result = await useCase.execute(consulta);
+
+    expect(result).toMatchObject({ status, situacao: esperada });
   });
 
   it('devolve veiculo null quando o veículo não está mais ativo', async () => {

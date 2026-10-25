@@ -36,6 +36,12 @@ const {
  *         status:
  *           type: string
  *           enum: [RECEBIDA, EM_DIAGNOSTICO, AGUARDANDO_APROVACAO, EM_EXECUCAO, FINALIZADA, ENTREGUE]
+ *         situacao:
+ *           type: string
+ *           description: >-
+ *             Frase para o cliente, a partir do status da OS e do orçamento. A OS continua AGUARDANDO_APROVACAO
+ *             depois da aprovação, até o início da manutenção; a situação já mostra o orçamento aprovado.
+ *           example: Orçamento aprovado. Aguardando o início da manutenção
  *         queixa: { type: string, example: Barulho ao frear }
  *         diagnostico: { type: string, nullable: true }
  *         veiculo:
