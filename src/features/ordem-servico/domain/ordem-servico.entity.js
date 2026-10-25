@@ -69,6 +69,25 @@ class OrdemServico {
     return this.#evento('DiagnosticoIniciado');
   }
 
+  /** Comando "Inicia Manutenção". */
+  iniciarManutencao() {
+    if (this.#status !== STATUS.AGUARDANDO_APROVACAO) {
+      throw new ConflictError('Só é possível iniciar o diagnóstico de uma ordem de serviço aguardando aprovação');
+    }
+    this.#status = STATUS.EM_EXECUCAO;
+    return this.#evento('ManutencaoIniciada');
+  }
+
+    /** Comando "Finaliza Manutenção". */
+  finalizarManutencao() {
+    if (this.#status === STATUS.ENTREGUE) {
+      throw new ConflictError('Não é possível finalizar uma ordem de serviço já entregue');
+    }
+
+    this.#status = STATUS.FINALIZADA;
+    return this.#evento('ManutencaoFinalizada');
+  }
+
   /** Comando "Adiciona Serviço": o status não muda, mas só vale durante o diagnóstico. */
   adicionarServico() {
     this.#ensureEmDiagnostico('Só é possível adicionar serviços durante o diagnóstico');
@@ -107,6 +126,27 @@ class OrdemServico {
     this.#status = STATUS.FINALIZADA;
     return this.#evento('OrdemServicoFinalizada');
   }
+
+  /**
+   * Policy "Finalizar Ordem de Serviço", que reage a "Manutenção Finalizada".
+   */
+  finalizarEmExecucao() {
+    if (this.#status === STATUS.FINALIZADA) return null;
+    if (this.#status !== STATUS.EM_EXECUCAO) {
+      throw new ConflictError('Só é possível finalizar uma ordem de serviço em execução');
+    }
+    this.#status = STATUS.FINALIZADA;
+    return this.#evento('OrdemServicoFinalizada');
+  }
+
+  entregarVeiculo() {
+    if (this.#status !== STATUS.FINALIZADA) {
+      throw new ConflictError('Só é possível entregar um veículo de uma ordem de serviço finalizada');
+    }
+    this.#status = STATUS.ENTREGUE;
+    return this.#evento('VeiculoEntregue');
+  }
+
 
   #ensureEmDiagnostico(mensagem) {
     if (this.#status !== STATUS.EM_DIAGNOSTICO) throw new ConflictError(mensagem);

@@ -14,6 +14,9 @@ function mensagemOrcamento({ numero, orcamento }) {
 const MENSAGENS = {
   OrdemServicoCriada: ({ numero }) => `Sua ordem de serviço nº ${numero} foi recebida`,
   DiagnosticoIniciado: ({ numero }) => `Sua ordem de serviço nº ${numero} está em diagnóstico`,
+  ManutencaoIniciada:  ({ numero }) => `Sua ordem de serviço nº ${numero} está em manutenção`,
+  ManutencaoFinalizada: ({ numero }) => `Sua ordem de serviço nº ${numero} está finalizada`,
+  VeiculoEntregue: ({ numero }) => `Veículo Entregue referente a ordem de serviço nº ${numero}`,
   DiagnosticoConcluido: mensagemOrcamento,
 };
 

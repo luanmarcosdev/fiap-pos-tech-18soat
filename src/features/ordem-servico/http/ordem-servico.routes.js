@@ -300,6 +300,69 @@ function createOrdemServicoRouter({ ordemServicoController }) {
     ordemServicoController.iniciarDiagnostico,
   );
 
+   /**
+   * @openapi
+   * /ordens-servico/{id}/iniciar-manutencao:
+   *   post:
+   *     tags: ['Fluxo da OS · Manutenção']
+   *     summary: Inicia a manutenção (AGUARDANDO_APROVACAO → EM_EXECUCAO) e notifica o cliente
+   *     security: [{ bearerAuth: [] }]
+   *     parameters: [{ $ref: '#/components/parameters/OrdemServicoId' }]
+   *     responses:
+   *       200: { $ref: '#/components/responses/OrdemServicoResposta' }
+   *       400: { $ref: '#/components/responses/DadosInvalidos' }
+   *       401: { $ref: '#/components/responses/NaoAutenticado' }
+   *       404: { $ref: '#/components/responses/OrdemServicoNaoEncontrada' }
+   *       409: { $ref: '#/components/responses/StatusNaoPermiteComando' }
+   */
+  router.post(
+    '/:id/iniciar-manutencao',
+    validateRequest({ params: idParamDto }),
+    ordemServicoController.iniciarManutencao,
+  );
+
+  /**
+   * @openapi
+   * /ordens-servico/{id}/finalizar-manutencao:
+   *   post:
+   *     tags: ['Fluxo da OS · Manutenção']
+   *     summary: finaliza a manutenção (FINALIZADA) e notifica o cliente
+   *     security: [{ bearerAuth: [] }]
+   *     parameters: [{ $ref: '#/components/parameters/OrdemServicoId' }]
+   *     responses:
+   *       200: { $ref: '#/components/responses/OrdemServicoResposta' }
+   *       400: { $ref: '#/components/responses/DadosInvalidos' }
+   *       401: { $ref: '#/components/responses/NaoAutenticado' }
+   *       404: { $ref: '#/components/responses/OrdemServicoNaoEncontrada' }
+   *       409: { $ref: '#/components/responses/StatusNaoPermiteComando' }
+   */
+  router.post(
+    '/:id/finalizar-manutencao',
+    validateRequest({ params: idParamDto }),
+    ordemServicoController.finalizarManutencao,
+  );
+
+  /**
+   * @openapi
+   * /ordens-servico/{id}/entregar-veiculo:
+   *   post:
+   *     tags: ['Fluxo da OS · Veículo']
+   *     summary: muda o status da OS para ENTREGUE e notifica o cliente
+   *     security: [{ bearerAuth: [] }]
+   *     parameters: [{ $ref: '#/components/parameters/OrdemServicoId' }]
+   *     responses:
+   *       200: { $ref: '#/components/responses/OrdemServicoResposta' }
+   *       400: { $ref: '#/components/responses/DadosInvalidos' }
+   *       401: { $ref: '#/components/responses/NaoAutenticado' }
+   *       404: { $ref: '#/components/responses/OrdemServicoNaoEncontrada' }
+   *       409: { $ref: '#/components/responses/StatusNaoPermiteComando' }
+   */
+  router.post(
+    '/:id/entregar-veiculo',
+    validateRequest({ params: idParamDto }),
+    ordemServicoController.entregarVeiculo,
+  );
+
   /**
    * @openapi
    * /ordens-servico/{id}/servicos:
