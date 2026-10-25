@@ -9,6 +9,20 @@ const swaggerSpec = swaggerJsdoc({
       title: 'FIAP Pós Tech 18SOAT - Mecânica API',
       version: '1.0.0',
     },
+    // o Swagger UI mostra os grupos nesta ordem; os comandos seguem os blocos do event storming
+    tags: [
+      { name: 'Público · Autenticação', description: 'Login do usuário da oficina (sem token)' },
+      { name: 'Público · Consulta de OS', description: 'Cliente acompanha a OS com o número e o CPF/CNPJ (sem token)' },
+      { name: 'Cadastros · Clientes', description: 'CRUD de clientes' },
+      { name: 'Cadastros · Veículos', description: 'CRUD de veículos' },
+      { name: 'Cadastros · Serviços', description: 'CRUD do catálogo de serviços' },
+      { name: 'Cadastros · Peças/Insumos', description: 'CRUD do catálogo de peças/insumos e entradas de estoque' },
+      { name: 'Fluxo da OS · Atendimento', description: 'Atendente abre a OS (status RECEBIDA)' },
+      { name: 'Fluxo da OS · Diagnóstico', description: 'Mecânico diagnostica e monta o orçamento' },
+      { name: 'Fluxo da OS · Orçamento', description: 'Atendente registra a aprovação ou reprovação do cliente' },
+      { name: 'Gestão · Ordens de Serviço', description: 'Listagem e detalhamento das ordens de serviço' },
+      { name: 'Sistema · Health', description: 'Disponibilidade da API' },
+    ],
     components: {
       securitySchemes: {
         bearerAuth: {

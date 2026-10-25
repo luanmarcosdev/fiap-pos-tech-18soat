@@ -9,8 +9,7 @@ function createAuthRouter({ authController }) {
    * @openapi
    * /auth/login:
    *   post:
-   *     tags:
-   *       - Auth
+   *     tags: ['Público · Autenticação']
    *     summary: Autentica o usuário e devolve um token JWT
    *     requestBody:
    *       required: true

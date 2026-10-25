@@ -61,7 +61,7 @@ function createClientesRouter({ clientesController }) {
    * @openapi
    * /clientes:
    *   post:
-   *     tags: [Clientes]
+   *     tags: ['Cadastros · Clientes']
    *     summary: Cadastra um cliente
    *     security: [{ bearerAuth: [] }]
    *     requestBody:
@@ -79,7 +79,7 @@ function createClientesRouter({ clientesController }) {
    *       401: { $ref: '#/components/responses/NaoAutenticado' }
    *       409: { $ref: '#/components/responses/DocumentoDuplicado' }
    *   get:
-   *     tags: [Clientes]
+   *     tags: ['Cadastros · Clientes']
    *     summary: Lista clientes com paginação e filtros
    *     security: [{ bearerAuth: [] }]
    *     parameters:
@@ -114,7 +114,7 @@ function createClientesRouter({ clientesController }) {
    * @openapi
    * /clientes/{id}:
    *   get:
-   *     tags: [Clientes]
+   *     tags: ['Cadastros · Clientes']
    *     summary: Busca um cliente pelo id
    *     security: [{ bearerAuth: [] }]
    *     parameters: [{ $ref: '#/components/parameters/ClienteId' }]
@@ -128,7 +128,7 @@ function createClientesRouter({ clientesController }) {
    *       401: { $ref: '#/components/responses/NaoAutenticado' }
    *       404: { $ref: '#/components/responses/ClienteNaoEncontrado' }
    *   put:
-   *     tags: [Clientes]
+   *     tags: ['Cadastros · Clientes']
    *     summary: Atualiza todos os dados de um cliente
    *     security: [{ bearerAuth: [] }]
    *     parameters: [{ $ref: '#/components/parameters/ClienteId' }]
@@ -148,7 +148,7 @@ function createClientesRouter({ clientesController }) {
    *       404: { $ref: '#/components/responses/ClienteNaoEncontrado' }
    *       409: { $ref: '#/components/responses/DocumentoDuplicado' }
    *   delete:
-   *     tags: [Clientes]
+   *     tags: ['Cadastros · Clientes']
    *     summary: Remove um cliente (soft delete)
    *     security: [{ bearerAuth: [] }]
    *     parameters: [{ $ref: '#/components/parameters/ClienteId' }]

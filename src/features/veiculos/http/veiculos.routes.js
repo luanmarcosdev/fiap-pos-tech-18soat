@@ -58,7 +58,7 @@ function createVeiculosRouter({ veiculosController }) {
    * @openapi
    * /veiculos:
    *   post:
-   *     tags: [Veiculos]
+   *     tags: ['Cadastros · Veículos']
    *     summary: Cadastra um veículo de um cliente
    *     security: [{ bearerAuth: [] }]
    *     requestBody:
@@ -77,7 +77,7 @@ function createVeiculosRouter({ veiculosController }) {
    *       409: { $ref: '#/components/responses/PlacaDuplicada' }
    *       422: { $ref: '#/components/responses/ClienteInexistente' }
    *   get:
-   *     tags: [Veiculos]
+   *     tags: ['Cadastros · Veículos']
    *     summary: Lista veículos com paginação e filtros
    *     security: [{ bearerAuth: [] }]
    *     parameters:
@@ -112,7 +112,7 @@ function createVeiculosRouter({ veiculosController }) {
    * @openapi
    * /veiculos/{id}:
    *   get:
-   *     tags: [Veiculos]
+   *     tags: ['Cadastros · Veículos']
    *     summary: Busca um veículo pelo id
    *     security: [{ bearerAuth: [] }]
    *     parameters: [{ $ref: '#/components/parameters/VeiculoId' }]
@@ -126,7 +126,7 @@ function createVeiculosRouter({ veiculosController }) {
    *       401: { $ref: '#/components/responses/NaoAutenticado' }
    *       404: { $ref: '#/components/responses/VeiculoNaoEncontrado' }
    *   put:
-   *     tags: [Veiculos]
+   *     tags: ['Cadastros · Veículos']
    *     summary: Atualiza todos os dados de um veículo
    *     security: [{ bearerAuth: [] }]
    *     parameters: [{ $ref: '#/components/parameters/VeiculoId' }]
@@ -147,7 +147,7 @@ function createVeiculosRouter({ veiculosController }) {
    *       409: { $ref: '#/components/responses/PlacaDuplicada' }
    *       422: { $ref: '#/components/responses/ClienteInexistente' }
    *   delete:
-   *     tags: [Veiculos]
+   *     tags: ['Cadastros · Veículos']
    *     summary: Remove um veículo (soft delete)
    *     security: [{ bearerAuth: [] }]
    *     parameters: [{ $ref: '#/components/parameters/VeiculoId' }]

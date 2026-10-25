@@ -6,8 +6,7 @@ const router = Router();
  * @openapi
  * /health:
  *   get:
- *     tags:
- *       - Health
+ *     tags: ['Sistema · Health']
  *     summary: Verifica se a API está online
  *     description: Endpoint para verificar se a API está online e funcionando corretamente.
  *     responses:

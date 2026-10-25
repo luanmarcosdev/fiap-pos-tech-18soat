@@ -59,7 +59,7 @@ function createServicosRouter({ servicosController }) {
    * @openapi
    * /servicos:
    *   post:
-   *     tags: [Servicos]
+   *     tags: ['Cadastros · Serviços']
    *     summary: Cadastra um serviço
    *     security: [{ bearerAuth: [] }]
    *     requestBody:
@@ -77,7 +77,7 @@ function createServicosRouter({ servicosController }) {
    *       401: { $ref: '#/components/responses/NaoAutenticado' }
    *       409: { $ref: '#/components/responses/ServicoDuplicado' }
    *   get:
-   *     tags: [Servicos]
+   *     tags: ['Cadastros · Serviços']
    *     summary: Lista serviços com paginação e filtro por nome
    *     security: [{ bearerAuth: [] }]
    *     parameters:
@@ -111,7 +111,7 @@ function createServicosRouter({ servicosController }) {
    * @openapi
    * /servicos/{id}:
    *   get:
-   *     tags: [Servicos]
+   *     tags: ['Cadastros · Serviços']
    *     summary: Busca um serviço pelo id
    *     security: [{ bearerAuth: [] }]
    *     parameters: [{ $ref: '#/components/parameters/ServicoId' }]
@@ -125,7 +125,7 @@ function createServicosRouter({ servicosController }) {
    *       401: { $ref: '#/components/responses/NaoAutenticado' }
    *       404: { $ref: '#/components/responses/ServicoNaoEncontrado' }
    *   put:
-   *     tags: [Servicos]
+   *     tags: ['Cadastros · Serviços']
    *     summary: Atualiza todos os dados de um serviço
    *     security: [{ bearerAuth: [] }]
    *     parameters: [{ $ref: '#/components/parameters/ServicoId' }]
@@ -145,7 +145,7 @@ function createServicosRouter({ servicosController }) {
    *       404: { $ref: '#/components/responses/ServicoNaoEncontrado' }
    *       409: { $ref: '#/components/responses/ServicoDuplicado' }
    *   delete:
-   *     tags: [Servicos]
+   *     tags: ['Cadastros · Serviços']
    *     summary: Remove um serviço (soft delete)
    *     security: [{ bearerAuth: [] }]
    *     parameters: [{ $ref: '#/components/parameters/ServicoId' }]

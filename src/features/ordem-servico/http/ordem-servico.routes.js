@@ -178,7 +178,7 @@ function createOrdemServicoRouter({ ordemServicoController }) {
    * @openapi
    * /ordens-servico:
    *   get:
-   *     tags: [OrdensServico]
+   *     tags: ['Gestão · Ordens de Serviço']
    *     summary: Lista ordens de serviço com paginação e filtros (mais recentes primeiro)
    *     security: [{ bearerAuth: [] }]
    *     parameters:
@@ -217,7 +217,7 @@ function createOrdemServicoRouter({ ordemServicoController }) {
    * @openapi
    * /ordens-servico:
    *   post:
-   *     tags: [OrdensServico]
+   *     tags: ['Fluxo da OS · Atendimento']
    *     summary: Cria a ordem de serviço do atendimento (status RECEBIDA) e notifica o cliente
    *     security: [{ bearerAuth: [] }]
    *     requestBody:
@@ -257,7 +257,7 @@ function createOrdemServicoRouter({ ordemServicoController }) {
    * @openapi
    * /ordens-servico/{id}:
    *   get:
-   *     tags: [OrdensServico]
+   *     tags: ['Gestão · Ordens de Serviço']
    *     summary: Detalha uma ordem de serviço com cliente, veículo e orçamento
    *     security: [{ bearerAuth: [] }]
    *     parameters: [{ $ref: '#/components/parameters/OrdemServicoId' }]
@@ -277,7 +277,7 @@ function createOrdemServicoRouter({ ordemServicoController }) {
    * @openapi
    * /ordens-servico/{id}/iniciar-diagnostico:
    *   post:
-   *     tags: [OrdensServico]
+   *     tags: ['Fluxo da OS · Diagnóstico']
    *     summary: Inicia o diagnóstico (RECEBIDA → EM_DIAGNOSTICO) e notifica o cliente
    *     security: [{ bearerAuth: [] }]
    *     parameters: [{ $ref: '#/components/parameters/OrdemServicoId' }]
@@ -298,7 +298,7 @@ function createOrdemServicoRouter({ ordemServicoController }) {
    * @openapi
    * /ordens-servico/{id}/servicos:
    *   post:
-   *     tags: [OrdensServico]
+   *     tags: ['Fluxo da OS · Diagnóstico']
    *     summary: Adiciona um serviço ao orçamento da OS em diagnóstico (copia o preço do catálogo)
    *     security: [{ bearerAuth: [] }]
    *     parameters: [{ $ref: '#/components/parameters/OrdemServicoId' }]
@@ -344,7 +344,7 @@ function createOrdemServicoRouter({ ordemServicoController }) {
    * @openapi
    * /ordens-servico/{id}/pecas:
    *   post:
-   *     tags: [OrdensServico]
+   *     tags: ['Fluxo da OS · Diagnóstico']
    *     summary: Adiciona uma peça/insumo ao orçamento da OS em diagnóstico (o estoque é verificado só ao gerar o orçamento)
    *     security: [{ bearerAuth: [] }]
    *     parameters: [{ $ref: '#/components/parameters/OrdemServicoId' }]
@@ -391,7 +391,7 @@ function createOrdemServicoRouter({ ordemServicoController }) {
    * @openapi
    * /ordens-servico/{id}/concluir-diagnostico:
    *   post:
-   *     tags: [OrdensServico]
+   *     tags: ['Fluxo da OS · Diagnóstico']
    *     summary: Conclui o diagnóstico, gera e envia o orçamento (válido por 14 dias) e notifica o cliente
    *     description: >-
    *       A OS vai de EM_DIAGNOSTICO para AGUARDANDO_APROVACAO e o orçamento para ENVIADO. A verificação de estoque
@@ -447,7 +447,7 @@ function createOrdemServicoPublicRouter({ ordemServicoController }) {
    * @openapi
    * /ordens-servico/consulta:
    *   post:
-   *     tags: [OrdensServico]
+   *     tags: ['Público · Consulta de OS']
    *     summary: Consulta aberta do cliente pelo número da OS e CPF/CNPJ
    *     description: 'POST para o documento não ir na URL (logs e histórico do navegador)'
    *     requestBody:
