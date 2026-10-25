@@ -17,6 +17,7 @@ const MENSAGENS = {
   ManutencaoIniciada:  ({ numero }) => `Sua ordem de serviço nº ${numero} está em manutenção`,
   ManutencaoFinalizada: ({ numero }) => `Sua ordem de serviço nº ${numero} está finalizada`,
   VeiculoEntregue: ({ numero }) => `Veículo Entregue referente a ordem de serviço nº ${numero}`,
+  PagamentoConfirmado: ({ numero }) => `Pagamento Confirmado referente a ordem de serviço nº ${numero}`,
   DiagnosticoConcluido: mensagemOrcamento,
 };
 

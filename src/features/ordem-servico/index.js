@@ -17,6 +17,7 @@ const { createOrdemServicoRouter, createOrdemServicoPublicRouter } = require('./
 const { IniciarManutencao } = require('./application/iniciar-manutencao');
 const { FinalizarManutencao } = require('./application/finalizar-manutencao');
 const { EntregarVeiculo } = require('./application/entregar-veiculo');
+const { ConfirmarPagamento } = require('./application/policies/confirmar-pagamento');
 
 // require na chamada: o orçamento vai usar a API da OS (mudar o status), e um require circular no topo
 // entregaria um módulo vazio a quem fosse carregado por último
@@ -45,6 +46,7 @@ const criarOrdemServico = new CriarOrdemServico({
 const iniciarDiagnostico = new IniciarDiagnostico({ ordensServicoRepository, notificarCliente });
 const iniciarManutencao = new IniciarManutencao({ordensServicoRepository, notificarCliente});
 const finalizarManutencao = new FinalizarManutencao({ordensServicoRepository, notificarCliente});
+const confirmarPagamento = new ConfirmarPagamento({ordensServicoRepository, notificarCliente});
 const entregarVeiculo = new EntregarVeiculo({ordensServicoRepository, notificarCliente});
 const adicionarServico = new AdicionarServico({ ordensServicoRepository, adicionarServicoOrcamento });
 const adicionarPeca = new AdicionarPeca({ ordensServicoRepository, adicionarPecaOrcamento });
@@ -67,7 +69,8 @@ const ordemServicoController = new OrdemServicoController({
   iniciarManutencao,
   finalizarOrdemServico,
   finalizarManutencao,
-  entregarVeiculo
+  entregarVeiculo,
+  confirmarPagamento
 });
 
 module.exports = {
