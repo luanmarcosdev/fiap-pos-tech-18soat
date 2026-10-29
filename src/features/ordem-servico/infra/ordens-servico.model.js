@@ -27,4 +27,23 @@ const OrdemServico = sequelize.define(
   },
 );
 
-module.exports = { OrdemServico };
+// uma linha por mudança de status (base do tempo médio); só inserida, nunca alterada
+const OrdemServicoHistorico = sequelize.define(
+  'OrdemServicoHistorico',
+  {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    ordem_servico_id: { type: DataTypes.UUID, allowNull: false },
+    status_anterior: { type: DataTypes.STRING(30), allowNull: true },
+    status: { type: DataTypes.STRING(30), allowNull: false },
+    alterado_em: { type: DataTypes.DATE, allowNull: false },
+    // gerado pelo banco (bigserial)
+    sequencia: { type: DataTypes.BIGINT, autoIncrement: true },
+  },
+  { tableName: 'ordens_servico_historico', underscored: true, timestamps: false },
+);
+
+module.exports = { OrdemServico, OrdemServicoHistorico };

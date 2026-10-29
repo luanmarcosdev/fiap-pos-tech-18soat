@@ -5,6 +5,7 @@ const notificador = require('./infra/notificador');
 const { NotificarCliente } = require('./application/policies/notificar-cliente');
 const { FinalizarOrdemServico } = require('./application/policies/finalizar-ordem-servico');
 const { ListarOrdensServico } = require('./application/listar-ordens-servico');
+const { CalcularTempoMedio } = require('./application/calcular-tempo-medio');
 const { DetalharOrdemServico } = require('./application/detalhar-ordem-servico');
 const { CriarOrdemServico } = require('./application/criar-ordem-servico');
 const { IniciarDiagnostico } = require('./application/iniciar-diagnostico');
@@ -31,6 +32,7 @@ const getOrcamentoEnviadoByOrdemServico = (...args) =>
 const notificarCliente = new NotificarCliente({ getClienteById, notificador });
 const finalizarOrdemServico = new FinalizarOrdemServico({ ordensServicoRepository });
 const listarOrdensServico = new ListarOrdensServico({ ordensServicoRepository });
+const calcularTempoMedio = new CalcularTempoMedio({ ordensServicoRepository });
 const detalharOrdemServico = new DetalharOrdemServico({
   ordensServicoRepository,
   getClienteById,
@@ -59,6 +61,7 @@ const consultarOrdemServico = new ConsultarOrdemServico({
 });
 const ordemServicoController = new OrdemServicoController({
   listarOrdensServico,
+  calcularTempoMedio,
   detalharOrdemServico,
   criarOrdemServico,
   iniciarDiagnostico,

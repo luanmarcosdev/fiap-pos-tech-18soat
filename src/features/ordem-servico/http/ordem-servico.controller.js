@@ -1,5 +1,6 @@
 class OrdemServicoController {
   #listarOrdensServico;
+  #calcularTempoMedio;
   #detalharOrdemServico;
   #criarOrdemServico;
   #iniciarDiagnostico;
@@ -14,6 +15,7 @@ class OrdemServicoController {
 
   constructor({
     listarOrdensServico,
+    calcularTempoMedio,
     detalharOrdemServico,
     criarOrdemServico,
     iniciarDiagnostico,
@@ -27,6 +29,7 @@ class OrdemServicoController {
     confirmarPagamento
   }) {
     this.#listarOrdensServico = listarOrdensServico;
+    this.#calcularTempoMedio = calcularTempoMedio;
     this.#detalharOrdemServico = detalharOrdemServico;
     this.#criarOrdemServico = criarOrdemServico;
     this.#iniciarDiagnostico = iniciarDiagnostico;
@@ -43,6 +46,11 @@ class OrdemServicoController {
   list = async (req, res) => {
     const ordensServico = await this.#listarOrdensServico.execute(req.validatedQuery);
     res.status(200).json(ordensServico);
+  };
+
+  tempoMedio = async (req, res) => {
+    const tempoMedio = await this.#calcularTempoMedio.execute(req.validatedQuery);
+    res.status(200).json(tempoMedio);
   };
 
   getById = async (req, res) => {

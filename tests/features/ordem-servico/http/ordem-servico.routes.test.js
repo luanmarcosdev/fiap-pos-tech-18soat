@@ -30,6 +30,45 @@ describe('/api/ordens-servico', () => {
   beforeEach(() => jest.spyOn(console, 'info').mockImplementation(() => {}));
   afterEach(() => jest.restoreAllMocks());
 
+  describe('GET /tempo-medio', () => {
+    const url = '/api/ordens-servico/tempo-medio';
+
+    it('401 sem token', async () => {
+      expect((await request(app).get(url)).status).toBe(401);
+    });
+
+    it('200 com o tempo total e o tempo em cada status, repassando o período', async () => {
+      ordensServicoRepository.findAverageTimes.mockResolvedValue({
+        total: { quantidade: 2, media_segundos: 103800.4 },
+        porStatus: [{ status: 'EM_EXECUCAO', quantidade: 2, media_segundos: 5400 }],
+      });
+
+      const response = await request(app).get(`${url}?de=2026-10-01&ate=2026-10-31`).set(auth);
+
+      expect(response.status).toBe(200);
+      expect(ordensServicoRepository.findAverageTimes).toHaveBeenCalledWith({ de: '2026-10-01', ate: '2026-10-31' });
+      expect(response.body.tempo_total).toEqual({
+        descricao: 'Da abertura da OS à entrega do veículo',
+        quantidade: 2,
+        media_segundos: 103800,
+        media: '1d 4h 50min',
+      });
+      expect(response.body.por_status).toContainEqual({
+        status: 'EM_EXECUCAO',
+        quantidade: 2,
+        media_segundos: 5400,
+        media: '1h 30min',
+      });
+    });
+
+    it('400 com ate anterior a de (e não é confundida com GET /:id)', async () => {
+      const response = await request(app).get(`${url}?de=2026-10-31&ate=2026-10-01`).set(auth);
+
+      expect(response.status).toBe(400);
+      expect(response.body.detalhes).toEqual([{ campo: 'ate', mensagem: 'ate não pode ser anterior a de' }]);
+    });
+  });
+
   describe('GET / (listagem)', () => {
     it('401 sem token', async () => {
       expect((await request(app).get('/api/ordens-servico')).status).toBe(401);

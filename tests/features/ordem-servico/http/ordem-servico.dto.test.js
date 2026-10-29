@@ -1,5 +1,6 @@
 const {
   listQueryDto,
+  tempoMedioQueryDto,
   consultaDto,
   criarDto,
   adicionarServicoDto,
@@ -19,6 +20,25 @@ describe('listQueryDto', () => {
     ['limit acima de 100', { limit: '101' }],
   ])('rejeita %s', (_, query) => {
     expect(listQueryDto.safeParse(query).success).toBe(false);
+  });
+});
+
+describe('tempoMedioQueryDto', () => {
+  it('aceita sem datas, só uma delas ou o mesmo dia nas duas', () => {
+    expect(tempoMedioQueryDto.parse({})).toEqual({});
+    expect(tempoMedioQueryDto.parse({ de: '2026-10-01' })).toEqual({ de: '2026-10-01' });
+    expect(tempoMedioQueryDto.parse({ de: '2026-10-29', ate: '2026-10-29' })).toEqual({
+      de: '2026-10-29',
+      ate: '2026-10-29',
+    });
+  });
+
+  it.each([
+    ['data em outro formato', { de: '01/10/2026' }],
+    ['data inexistente', { ate: '2026-02-30' }],
+    ['ate anterior a de', { de: '2026-10-31', ate: '2026-10-01' }],
+  ])('rejeita %s', (_, query) => {
+    expect(tempoMedioQueryDto.safeParse(query).success).toBe(false);
   });
 });
 
