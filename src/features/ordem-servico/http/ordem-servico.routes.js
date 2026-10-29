@@ -3,6 +3,7 @@ const { validateRequest } = require('../../../infra/http/validate-request');
 const {
   idParamDto,
   listQueryDto,
+  tempoMedioQueryDto,
   consultaDto,
   criarDto,
   adicionarServicoDto,
@@ -158,6 +159,12 @@ const {
  *               allOf: [{ $ref: '#/components/schemas/OrdemServicoOrcamento' }]
  *               nullable: true
  *               description: 'null enquanto nenhum serviço ou peça/insumo foi adicionado'
+ *     TempoMedio:
+ *       type: object
+ *       properties:
+ *         quantidade: { type: integer, description: 'Etapas (ou entregas) consideradas na média', example: 12 }
+ *         media_segundos: { type: integer, nullable: true, example: 103800 }
+ *         media: { type: string, nullable: true, example: 1d 4h 50min }
  *   parameters:
  *     OrdemServicoId:
  *       in: path
@@ -268,6 +275,55 @@ function createOrdemServicoRouter({ ordemServicoController }) {
    *             schema: { $ref: '#/components/schemas/Erro' }
    */
   router.post('/', validateRequest({ body: criarDto }), ordemServicoController.create);
+
+  /**
+   * @openapi
+   * /ordens-servico/tempo-medio:
+   *   get:
+   *     tags: ['Gestão · Ordens de Serviço']
+   *     summary: Tempo médio da OS, da abertura à entrega, e em cada status (monitoramento do tempo de execução)
+   *     description: >-
+   *       Calculado a partir do histórico de status, gravado a cada mudança. O tempo total cobre todo o atendimento,
+   *       inclusive OS com orçamento reprovado (também entregues); a execução dos serviços é o status EM_EXECUCAO
+   *       em por_status. O período filtra pela data em que a
+   *       etapa terminou (para o tempo total, a data da entrega). Datas de Brasília, inclusivas; sem datas, considera
+   *       todo o histórico. Médias sem etapas encerradas no período vêm null.
+   *     security: [{ bearerAuth: [] }]
+   *     parameters:
+   *       - { in: query, name: de, schema: { type: string, format: date, example: '2026-10-01' } }
+   *       - { in: query, name: ate, schema: { type: string, format: date, example: '2026-10-31' } }
+   *     responses:
+   *       200:
+   *         description: Tempos médios
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 periodo:
+   *                   type: object
+   *                   properties:
+   *                     de: { type: string, format: date, nullable: true }
+   *                     ate: { type: string, format: date, nullable: true }
+   *                 tempo_total:
+   *                   allOf: [{ $ref: '#/components/schemas/TempoMedio' }]
+   *                   type: object
+   *                   properties:
+   *                     descricao: { type: string, example: Da abertura da OS à entrega do veículo }
+   *                 por_status:
+   *                   type: array
+   *                   description: 'Tempo médio em cada status até sair dele (ENTREGUE é o último, não entra)'
+   *                   items:
+   *                     allOf: [{ $ref: '#/components/schemas/TempoMedio' }]
+   *                     type: object
+   *                     properties:
+   *                       status:
+   *                         type: string
+   *                         enum: [RECEBIDA, EM_DIAGNOSTICO, AGUARDANDO_APROVACAO, EM_EXECUCAO, FINALIZADA]
+   *       400: { $ref: '#/components/responses/DadosInvalidos' }
+   *       401: { $ref: '#/components/responses/NaoAutenticado' }
+   */
+  router.get('/tempo-medio', validateRequest({ query: tempoMedioQueryDto }), ordemServicoController.tempoMedio);
 
   /**
    * @openapi

@@ -40,9 +40,18 @@ const listQueryDto = paginationQueryDto.extend({
   veiculo_id: z.uuid().optional(),
 });
 
+// datas de Brasília, inclusivas; sem datas, considera todo o histórico
+const tempoMedioQueryDto = z
+  .object({
+    de: z.iso.date().optional(),
+    ate: z.iso.date().optional(),
+  })
+  .refine(({ de, ate }) => !de || !ate || de <= ate, { message: 'ate não pode ser anterior a de', path: ['ate'] });
+
 module.exports = {
   idParamDto,
   listQueryDto,
+  tempoMedioQueryDto,
   consultaDto,
   criarDto,
   adicionarServicoDto,
