@@ -289,3 +289,7 @@ tests/                   # espelha src/ (ex.: tests/features/health/health.test.
 A implementação segue o event storming: cada comando vira um caso de uso com o mesmo nome em `application/` (ex.: *Aprova Orçamento* → `orcamento/application/aprovar-orcamento.js`), e os termos da linguagem ubíqua são usados em entidades, eventos, tabelas e rotas.
 
 
+
+## Vídeo da entrega
+
+- **YouTube:** <https://www.youtube.com/watch?v=AAXu5ZQyM24>
